@@ -915,6 +915,8 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-70` | The new tab page refreshes when history is deleted; "Recently visited" opens and closes, kept on the phone. | Owner | 2026-11-25 |
 | `UI-71` | History has a select mode: choose visits, "Select all" on screen, delete them at once; a search keeps only the chosen ones still shown. | Owner | 2026-11-25 |
 | `UI-72` | New tab page shows sites' own icons kept from visits (https, no cookies, ≤ 200 KB, PNG/JPEG/GIF/WebP/ICO, weekly), on a light tile; cache folder only; gone with history or cached files | Default | 2026-11-25 |
+| `UI-73` | On a Mac or an iPad the address bar starts at the top (bottom on phones, by device type); a stored or restored choice is never changed. | Owner | 2026-11-25 |
+| `UI-74` | Mac and iPad only (never phones or Android): a tab strip above the top bar in windows ≥ 700 pt, setting on by default: current kind's tabs, icon, title, ×, +, group labels that fold. | Owner | 2026-11-25 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

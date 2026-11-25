@@ -30,6 +30,7 @@ import {
   Platform,
   StyleSheet,
   useColorScheme,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -244,6 +245,9 @@ import { holdSplash } from './src/ui/launch';
 import { darkPalette, lightPalette } from './src/ui/theme';
 import { usePersistSession } from './src/storage/usePersistSession';
 import { useRecordHistory } from './src/storage/useRecordHistory';
+import { TabStrip } from './src/components/TabStrip';
+import { stripDevice } from './src/device/macDevice';
+import { showTabStrip } from './src/ui/tabStrip';
 import { clearSiteIcons } from './src/storage/siteIcons';
 import { setIncognitoProbe } from './src/analytics';
 import { askAnalyticsConsentOnce } from './src/analytics/consentPrompt';
@@ -2085,6 +2089,17 @@ function BrowserApp({
   const barAtBottom = settings.addressBarPosition === 'bottom';
   // The bottom address bar's height, so a toast stays above it (UI-48).
   const [bottomBarHeight, setBottomBarHeight] = useState(0);
+  // The desktop-style tab strip above the top bar on a Mac or an iPad in a wide window; never on a phone (UI-74).
+  const windowSize = useWindowDimensions();
+  const stripShown = showTabStrip(windowSize, stripDevice, settings.addressBarPosition, settings.tabStrip);
+  const [stripHeight, setStripHeight] = useState(0);
+  const closeStripTab = (closing: typeof tab) => {
+    bump();
+    // Only normal web pages are remembered, so only those can be undone (as in the tab switcher).
+    if (browser.closeTab(closing.id)) {
+      toast.show(t('tabs.closed'), { label: t('tabs.undo'), onPress: () => browser.reopenClosed(0) });
+    }
+  };
   coveredRef.current = panelOpen || settingsVisible || tabsVisible || screen?.kind === 'library' || tasksScreen !== null;
   // The step strip's line: the running conversation's latest step line, in the user's language.
   const stripSource = runningChat ? currentStripLine(runningChat.items.slice(-12)) : 'thinking';
@@ -2390,9 +2405,21 @@ function BrowserApp({
               </BarLayout>
             </KeyboardAvoidingContainer>
           ) : (
-            <BarLayout position="top" bar={barArea} status={barStatus}>
-              <KeyboardAvoidingContainer style={styles.flex}>{pageContent}</KeyboardAvoidingContainer>
-            </BarLayout>
+            <>
+              {stripShown ? (
+                <TabStrip
+                  browser={browser}
+                  width={windowSize.width - insets.left - insets.right}
+                  darkMode={darkMode}
+                  onCloseTab={closeStripTab}
+                  onNewTab={(incognito) => browser.openTab(undefined, { incognito })}
+                  onHeight={setStripHeight}
+                />
+              ) : null}
+              <BarLayout position="top" bar={barArea} status={barStatus}>
+                <KeyboardAvoidingContainer style={styles.flex}>{pageContent}</KeyboardAvoidingContainer>
+              </BarLayout>
+            </>
           )}
         </SafeAreaView>
         {/* Where the assistant acts: over the page, under the panel (docs/working-mode.md). */}
@@ -2497,6 +2524,7 @@ function BrowserApp({
           incognito={tab.incognito}
           darkMode={darkMode}
           anchor={barAtBottom ? 'bottom' : 'top'}
+          topOffset={stripShown ? stripHeight : 0}
           onClose={() => setMenuVisible(false)}
         />
         <AppScreens

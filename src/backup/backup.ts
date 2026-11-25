@@ -68,6 +68,7 @@ export const BACKUP_POLICY = {
   blockVideoAds: 'backup',
   theme: 'backup',
   addressBarPosition: 'backup',
+  tabStrip: 'backup',
   haptics: 'backup',
   httpsOnly: 'backup',
   blockThirdPartyCookies: 'backup',
@@ -125,6 +126,7 @@ export function backupSettings(s: Settings): BackupSettings {
     blockVideoAds: s.blockVideoAds,
     theme: s.theme,
     addressBarPosition: s.addressBarPosition,
+    tabStrip: s.tabStrip,
     haptics: s.haptics,
     httpsOnly: s.httpsOnly,
     blockThirdPartyCookies: s.blockThirdPartyCookies,
@@ -225,6 +227,7 @@ export function mergeSettings(current: Settings, p: BackupPayload, mode: ApplyMo
     take('blockVideoAds', s.blockVideoAds);
     take('theme', s.theme);
     take('addressBarPosition', s.addressBarPosition);
+    take('tabStrip', s.tabStrip);
     take('haptics', s.haptics);
     take('httpsOnly', s.httpsOnly);
     take('blockThirdPartyCookies', s.blockThirdPartyCookies);

@@ -14,6 +14,12 @@ public class QutaiEntryModule: Module {
       EntryQueue.shared.take()
     }
 
+    /// Whether this iPhone/iPad build runs on an Apple Silicon Mac ("Designed for iPad"): the address bar starts at the
+    /// top there and wide windows get the tab strip (UI-73, UI-74; src/device/macDevice.ts).
+    Function("isiOSAppOnMac") { () -> Bool in
+      ProcessInfo.processInfo.isiOSAppOnMac
+    }
+
     /// Shares prepared files and/or text to another app after the user's tap on a card: the system share sheet
     /// (UIActivityViewController) with the text and every file, where the user picks the app (and in it the chat).
     /// Whether an app keeps the text next to a file is up to that app's share extension; the JavaScript side copies

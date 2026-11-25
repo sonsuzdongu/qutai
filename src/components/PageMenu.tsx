@@ -34,18 +34,20 @@ type Props = {
   darkMode?: boolean;
   /** Where the address bar with the ⋮ button is: the menu opens next to it, above it when it is at the bottom. */
   anchor?: 'top' | 'bottom';
+  /** Extra room above a top bar: the tab strip's height in a wide window (UI-74). */
+  topOffset?: number;
   onClose: () => void;
 };
 
 /** Overflow menu anchored at the ⋮ button, like the Chrome page menu. */
-export function PageMenu({ visible, iconRow, items, incognito, darkMode, anchor = 'top', onClose }: Props) {
+export function PageMenu({ visible, iconRow, items, incognito, darkMode, anchor = 'top', topOffset = 0, onClose }: Props) {
   const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const keyboard = useKeyboardHeight();
   // The room between the bars (menuFrame.ts); long menus scroll inside it (short screens, large text), the icon row
   // stays on top.
-  const frame = menuFrame(insets.top, insets.bottom, keyboard, anchor);
+  const frame = menuFrame(insets.top + topOffset, insets.bottom, keyboard, anchor);
   const theme = incognito || darkMode ? dark : light;
   const palette = incognito || darkMode ? darkPalette : lightPalette;
   // An open submenu ("Library", "More"); it starts over each time the menu opens.

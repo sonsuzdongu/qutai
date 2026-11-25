@@ -57,6 +57,8 @@ import { FilterListsScreen } from './FilterListsScreen';
 import { siteRules } from '../storage/siteRules';
 import { dialog, DialogHost } from './Dialog';
 import { KeyboardAwareScrollView } from './KeyboardAware';
+import { stripDevice } from '../device/macDevice';
+import { offersTabStrip } from '../ui/tabStrip';
 
 /** What Settings says beside a "Don't ask again" switch: where the data goes, or what is still asked. */
 const ALWAYS_ALLOW_NOTES: Partial<Record<AlwaysAllowKind, Parameters<typeof t>[0]>> = {
@@ -661,6 +663,15 @@ function SettingsPages({
                   onChange={(addressBarPosition) => set({ addressBarPosition })}
                 />
               </GroupItem>
+              {/* Mac and iPad only; never offered on a phone (UI-74). */}
+              {offersTabStrip(stripDevice) ? (
+                <GroupSwitch
+                  title={t('settings.tabStrip')}
+                  hint={t('settings.tabStripHint')}
+                  value={settings.tabStrip}
+                  onChange={(tabStrip) => set({ tabStrip })}
+                />
+              ) : null}
               <GroupSwitch
                 title={t('settings.showAssistantButton')}
                 hint={t('settings.showAssistantButtonHint')}

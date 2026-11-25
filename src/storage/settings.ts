@@ -9,6 +9,11 @@ import { AlwaysAllowKind, parseAlwaysAllow, serializeAlwaysAllow } from '../agen
 import { removeDefaultStyleLine, removeRetiredInstructionLines } from '../agent/retiredInstructions';
 import { cleanCustomInstructions } from '../agent/systemPrompt';
 import { secureStoreReady } from './secureStoreGate';
+import { stripDevice } from '../device/macDevice';
+import { addressBarPositionFor, offersTabStrip } from '../ui/tabStrip';
+
+/** A Mac or an iPad: the address bar starts at the top and the tab strip is offered (UI-73, UI-74). */
+const wideDevice = offersTabStrip(stripDevice);
 
 export type Settings = {
   provider: ProviderId;
@@ -72,6 +77,8 @@ export type Settings = {
   theme: ThemeSetting;
   /** Address bar at the top (default) or the bottom of the screen. */
   addressBarPosition: 'top' | 'bottom';
+  /** Mac and iPad: the tabs in a strip above the top address bar (UI-74); on by default, never offered on a phone. */
+  tabStrip: boolean;
   /** Light vibrations for taps like switching tabs. */
   haptics: boolean;
   /** Open sites over https:// only, asking before falling back to http://. */
@@ -164,7 +171,9 @@ export const DEFAULT_SETTINGS: Settings = {
   hideCookieBanners: true,
   blockVideoAds: false,
   theme: 'system',
-  addressBarPosition: 'bottom',
+  // Top on a Mac or an iPad, bottom elsewhere (UI-73): also what a backup's merge treats as "never changed".
+  addressBarPosition: addressBarPositionFor(null, wideDevice),
+  tabStrip: true,
   haptics: true,
   httpsOnly: false,
   blockThirdPartyCookies: true,
@@ -212,6 +221,7 @@ const KEYS = {
   blockVideoAds: 'block_video_ads',
   theme: 'theme',
   addressBarPosition: 'address_bar_position',
+  tabStrip: 'tab_strip',
   haptics: 'haptics',
   httpsOnly: 'https_only',
   blockThirdPartyCookies: 'block_third_party_cookies',
@@ -313,6 +323,7 @@ export async function loadSettings(): Promise<Settings> {
     blockVideoAds,
     theme,
     addressBarPosition,
+    tabStrip,
     haptics,
     httpsOnly,
     blockThirdPartyCookies,
@@ -362,6 +373,7 @@ export async function loadSettings(): Promise<Settings> {
     get(KEYS.blockVideoAds),
     get(KEYS.theme),
     get(KEYS.addressBarPosition),
+    get(KEYS.tabStrip),
     get(KEYS.haptics),
     get(KEYS.httpsOnly),
     get(KEYS.blockThirdPartyCookies),
@@ -421,7 +433,9 @@ export async function loadSettings(): Promise<Settings> {
     hideCookieBanners: hideCookieBanners !== 'false',
     blockVideoAds: blockVideoAds === 'true',
     theme: THEMES.includes(theme as ThemeSetting) ? (theme as ThemeSetting) : 'system',
-    addressBarPosition: addressBarPosition === 'top' ? 'top' : 'bottom',
+    // Never chosen: at the top on a Mac or an iPad, at the bottom elsewhere (UI-73); a stored choice always wins.
+    addressBarPosition: addressBarPositionFor(addressBarPosition, wideDevice),
+    tabStrip: tabStrip !== 'false',
     haptics: haptics !== 'false',
     httpsOnly: httpsOnly === 'true',
     blockThirdPartyCookies: blockThirdPartyCookies !== 'false',
@@ -545,6 +559,7 @@ export async function saveSettings(settings: Settings): Promise<void> {
     set(KEYS.blockVideoAds, String(settings.blockVideoAds)),
     set(KEYS.theme, settings.theme),
     set(KEYS.addressBarPosition, settings.addressBarPosition),
+    set(KEYS.tabStrip, String(settings.tabStrip)),
     set(KEYS.haptics, String(settings.haptics)),
     set(KEYS.httpsOnly, String(settings.httpsOnly)),
     set(KEYS.blockThirdPartyCookies, String(settings.blockThirdPartyCookies)),
