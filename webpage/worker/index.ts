@@ -1,6 +1,6 @@
 /**
  * The dynamic parts of the site: `/` sends the visitor to `/en/` or `/tr/` (and `/privacy-policy` to that language's
- * `/<lang>/privacy-policy/`, `/features` to `/<lang>/features/`, `/delete-account` to `/<lang>/delete-account/`, `/support` to `/<lang>/support/`, `/terms` to `/<lang>/terms/`),
+ * `/<lang>/privacy-policy/`, `/features` to `/<lang>/features/`, `/pricing` to `/<lang>/pricing/`, `/delete-account` to `/<lang>/delete-account/`, `/support` to `/<lang>/support/`, `/terms` to `/<lang>/terms/`),
  * `/intent/sign-in/email` hands the sign-in email's link to the app (worker/intent.ts), and `/.well-known/` serves the App Links / Universal Links files
  * when they are configured (worker/wellKnown.ts).
  *
@@ -35,23 +35,26 @@ export default {
     }
     const policy = url.pathname === '/privacy-policy' || url.pathname === '/privacy-policy/';
     const features = url.pathname === '/features' || url.pathname === '/features/';
+    const pricing = url.pathname === '/pricing' || url.pathname === '/pricing/';
     const deletion = url.pathname === '/delete-account' || url.pathname === '/delete-account/';
     const support = url.pathname === '/support' || url.pathname === '/support/';
     const terms = url.pathname === '/terms' || url.pathname === '/terms/';
-    if (url.pathname !== '/' && !policy && !features && !deletion && !support && !terms) return env.ASSETS.fetch(request);
+    if (url.pathname !== '/' && !policy && !features && !pricing && !deletion && !support && !terms) return env.ASSETS.fetch(request);
 
     const lang = pickLanguage(request.headers.get('Cookie'), request.headers.get('Accept-Language'));
     const path = policy
       ? 'privacy-policy/'
       : features
         ? 'features/'
-        : deletion
-          ? 'delete-account/'
-          : support
-            ? 'support/'
-            : terms
-              ? 'terms/'
-              : '';
+        : pricing
+          ? 'pricing/'
+          : deletion
+            ? 'delete-account/'
+            : support
+              ? 'support/'
+              : terms
+                ? 'terms/'
+                : '';
     const target = new URL(`/${lang}/${path}`, url);
     target.search = url.search;
     return new Response(null, {

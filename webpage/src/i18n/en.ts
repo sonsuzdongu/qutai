@@ -20,6 +20,7 @@ export const en = {
   'nav.openSource': 'Open source',
   'nav.status': 'Status',
   'nav.features': 'Features',
+  'nav.pricing': 'Pricing',
   'nav.github': 'GitHub',
   'nav.home': 'Qutai home',
 

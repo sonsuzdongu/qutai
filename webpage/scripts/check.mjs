@@ -138,8 +138,16 @@ for (const lang of ['en', 'tr']) {
   }
   const home = await readFile(`${dist}${lang}/index.html`, 'utf8');
   expect(home.includes(`href="/${lang}/features/"`), `${lang}: home links to the features page`);
+  const pricing = await readFile(`${dist}${lang}/pricing/index.html`, 'utf8').catch(() => '');
+  expect(pricing.includes(`<html lang="${lang}"`), `${lang}/pricing: page with lang attribute`);
+  expect(pricing.includes(`<link rel="canonical" href="`) && pricing.includes('hreflang="x-default"'), `${lang}/pricing: canonical and hreflang`);
+  expect(!/<script\b/.test(pricing), `${lang}/pricing: no script`);
+  expect(!/\sstyle="/.test(pricing), `${lang}/pricing: no inline style (the CSP forbids it)`);
+  expect((pricing.match(/class="pack( bonus)?"/g) ?? []).length === 3, `${lang}/pricing: three credit packs`);
+  expect(home.includes(`href="/${lang}/pricing/"`), `${lang}: home links to the pricing page`);
 }
 expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/features/'), 'sitemap lists the features page');
+expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/pricing/'), 'sitemap lists the pricing page');
 
 for (const f of ['robots.txt', 'sitemap.xml', '404.html', '_headers', 'og-en.png', 'og-tr.png', 'apple-touch-icon.png']) {
   await access(`${dist}${f}`).catch(() => failures.push(`missing ${f}`));
@@ -153,4 +161,4 @@ if (failures.length) {
   console.error(`✗ ${failures.length} check(s) failed:\n  ${failures.join('\n  ')}`);
   process.exit(1);
 }
-console.log(`✓ ${cases.length} language cases, both pages with their features, privacy policy, terms of use, account deletion and support pages, no third-party loads`);
+console.log(`✓ ${cases.length} language cases, both pages with their features, pricing, privacy policy, terms of use, account deletion and support pages, no third-party loads`);

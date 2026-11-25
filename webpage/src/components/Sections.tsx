@@ -33,6 +33,9 @@ export function Header({ page }: { page?: string } = {}) {
           <a href={`/${lang}/features/`} aria-current={page === 'features/' ? 'page' : undefined}>
             {t('nav.features')}
           </a>
+          <a href={`/${lang}/pricing/`} aria-current={page === 'pricing/' ? 'page' : undefined}>
+            {t('nav.pricing')}
+          </a>
           <a href={`${home}#privacy`}>{t('nav.privacy')}</a>
           <a href={`${home}#compare`}>{t('nav.compare')}</a>
           <a href={`${home}#open-source`}>{t('nav.openSource')}</a>
@@ -545,6 +548,9 @@ export function Footer() {
           </li>
           <li>
             <a href={`/${lang}/features/`}>{t('nav.features')}</a>
+          </li>
+          <li>
+            <a href={`/${lang}/pricing/`}>{t('nav.pricing')}</a>
           </li>
           <li>
             <a href={privacyPolicyPath(lang)}>{t('footer.appPrivacy')}</a>

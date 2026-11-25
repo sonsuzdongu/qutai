@@ -2,15 +2,17 @@ import { StrictMode } from 'react';
 import { renderToString } from 'react-dom/server';
 import { App } from './App';
 import { FeaturesPage } from './components/FeaturesPage';
+import { PricingPage } from './components/PricingPage';
 import { FEATURES_CHECKED, GROUPS, PAGE as FEATURES_PAGE } from './data/features';
 import { CHECKED } from './data/comparison';
+import { PAGE as PRICING_PAGE, PRICING_CHECKED } from './data/pricing';
 import { en } from './i18n/en';
 import { tr } from './i18n/tr';
 import { I18nProvider, formatDate } from './lib/i18n';
 import { CONTACT_EMAIL, SITE_URL } from './lib/site';
 
 export const messages = { en, tr };
-export { CHECKED, CONTACT_EMAIL, SITE_URL, formatDate, FEATURES_CHECKED, FEATURES_PAGE, GROUPS };
+export { CHECKED, CONTACT_EMAIL, SITE_URL, formatDate, FEATURES_CHECKED, FEATURES_PAGE, GROUPS, PRICING_PAGE, PRICING_CHECKED };
 
 /** The page body for one language; scripts/prerender.mjs puts it into index.html with the head tags. */
 export function render(lang: 'en' | 'tr'): string {
@@ -28,6 +30,15 @@ export function renderFeatures(lang: 'en' | 'tr'): string {
   return renderToString(
     <I18nProvider lang={lang} messages={messages[lang]}>
       <FeaturesPage />
+    </I18nProvider>,
+  );
+}
+
+/** The /<lang>/pricing/ page body: static, no script (scripts/prerender.mjs). */
+export function renderPricing(lang: 'en' | 'tr'): string {
+  return renderToString(
+    <I18nProvider lang={lang} messages={messages[lang]}>
+      <PricingPage />
     </I18nProvider>,
   );
 }

@@ -239,8 +239,8 @@ a:hover {
   display: none;
 }
 
-/* Six section links fit from 1000 px on; narrower screens get the brand, language and GitHub only. */
-@media (max-width: 1000px) {
+/* Seven section links fit from 1080 px on; narrower screens get the brand, language and GitHub only. */
+@media (max-width: 1080px) {
   .main-nav {
     display: none;
   }
@@ -2434,4 +2434,192 @@ h3 {
   max-width: 980px;
   margin-left: auto;
   margin-right: auto;
+}
+
+/* Pricing page (/<lang>/pricing/). */
+.pricing-hero {
+  padding-top: clamp(40px, 7vw, 88px);
+  padding-bottom: clamp(24px, 4vw, 40px);
+  text-align: center;
+}
+.pricing-hero .eyebrow {
+  display: inline-block;
+  color: var(--accent-ink);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+}
+.pricing-hero h1 {
+  font-size: clamp(2.2rem, 5.4vw, 4.2rem);
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  max-width: 16em;
+  margin: 0 auto;
+}
+.pricing-hero .lede,
+.pricing .band .lede {
+  margin: 20px auto 0;
+  font-size: clamp(1.06rem, 1.5vw, 1.22rem);
+  color: var(--muted);
+  max-width: 38em;
+}
+.plans {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr));
+  gap: clamp(16px, 2.4vw, 28px);
+  padding-bottom: clamp(48px, 7vw, 88px);
+  max-width: 980px;
+}
+.plan {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: clamp(22px, 3vw, 32px);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--gold) 30%, transparent);
+}
+.plan-credits {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  box-shadow: inset 0 4px 0 var(--accent);
+}
+.plan-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+.plan h2 {
+  margin-top: 14px;
+  font-size: 1.5rem;
+}
+.plan-price {
+  margin-top: 6px;
+  font: 600 clamp(1.9rem, 4vw, 2.4rem) / 1.1 var(--display);
+  color: var(--accent-ink);
+}
+.plan-sub {
+  margin-top: 10px;
+  color: var(--muted);
+}
+.plan ul {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 18px 0 0;
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 12px;
+}
+.plan li {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+.plan li .mark {
+  margin-top: 3px;
+  color: var(--good);
+}
+.pricing .band h2 {
+  text-align: center;
+  font-size: clamp(1.8rem, 3.6vw, 2.6rem);
+}
+.packs {
+  list-style: none;
+  margin: 32px auto 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 2vw, 20px);
+  max-width: 820px;
+}
+.pack {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px 12px 18px;
+  text-align: center;
+}
+.pack.bonus {
+  border-color: color-mix(in srgb, var(--gold) 60%, var(--line));
+}
+.pack-credits {
+  color: var(--muted);
+}
+.pack-credits strong {
+  display: block;
+  font: 600 clamp(1.9rem, 5vw, 2.6rem) / 1.05 var(--display);
+  color: var(--text);
+}
+.pack-price {
+  margin-top: 10px;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--accent-ink);
+}
+.pack-bonus {
+  margin-top: 8px;
+  font-size: 0.88rem;
+  color: var(--part);
+  font-weight: 600;
+}
+.pack-note {
+  margin: 18px auto 0;
+  max-width: 40em;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+.pack-note + .pack-note {
+  margin-top: 6px;
+}
+.pack-cta {
+  margin-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  align-items: center;
+  justify-content: center;
+}
+.pricing-faq {
+  padding-top: clamp(48px, 7vw, 88px);
+  padding-bottom: clamp(48px, 7vw, 88px);
+  max-width: 820px;
+}
+.pricing-faq h2 {
+  font-size: clamp(1.8rem, 3.6vw, 2.6rem);
+}
+.pricing-faq dl {
+  margin: 24px 0 0;
+}
+.pricing-faq dl > div {
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+}
+.pricing-faq dt {
+  font-weight: 600;
+  font-size: 1.08rem;
+}
+.pricing-faq dd {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+.pricing-terms {
+  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.pricing-terms a {
+  color: var(--accent-ink);
+}
+@media (max-width: 520px) {
+  .packs {
+    grid-template-columns: 1fr;
+    max-width: 320px;
+  }
+  .pack-bonus.empty {
+    display: none;
+  }
 }

@@ -21,6 +21,7 @@ export const tr: Messages = {
   'nav.openSource': 'Açık kaynak',
   'nav.status': 'Durum',
   'nav.features': 'Özellikler',
+  'nav.pricing': 'Fiyatlar',
   'nav.github': 'GitHub',
   'nav.home': 'Qutai ana sayfa',
 

@@ -67,7 +67,7 @@ The open questions, in one place (each row says what the app does today).
 | `CRED-38` | Today, with an own key, a request still running when the user leaves the app is kept alive for at most 3 minutes, and not for incognito… | [34](34-credits-and-relay.md) |
 | `BUY-9` | Today a refund that Apple later cancels does not give the credits back automatically; support can grant them by hand. | [35](35-purchases.md) |
 | `BUY-24` | Today Qutai only asks RevenueCat to delete a deleted user's customer record; whether to require more is open. | [35](35-purchases.md) |
-| `BUY-25` | Today the packs are decided (three Android packs) but the RevenueCat project, Play products, notifications and panel packs are still being created; no trial credits. | [35](35-purchases.md) |
+| `BUY-25` | Today the packs are decided (three Android packs; since 2026-11-26 100 / 550 / 1,200 credits for $1 / $5 / $10) but the RevenueCat project, Play products, notifications and panel packs are still being created; no trial credits. | [35](35-purchases.md) |
 | `BACK-4` | Today new files use scrypt (a slow password-to-key function) with N = 2^14, r = 8, p = 1 and XChaCha20-Poly1305 encryption; files asking… | [36](36-server-backup.md) |
 | `BACK-5` | Today the backup contents are not compressed. | [36](36-server-backup.md) |
 | `BACK-7` | Today the kept password is cleared on sign-out and account deletion, kept when the server ended the session, and cleared by the iPhone… | [36](36-server-backup.md) |
@@ -1377,6 +1377,7 @@ Moved to Details (ids retired, not reused): `LEGAL-16`, `LEGAL-17`
 | `WEB-12` | The features page describes only what the code does today, from the design record, with limits stated… | Default |  |
 | `WEB-13` | The site has an account deletion page (`/en/delete-account/`, `/tr/delete-account/`, and `/delete-account`… | Owner | 2026-11-21 |
 | `WEB-14` | The site has a terms-of-use page (`/en/terms/`, `/tr/terms/`, `/terms` redirects) with the pro build's terms… | Owner | 2026-11-21 |
+| `WEB-15` | The site has a pricing page (`/en/pricing/`, `/tr/pricing/`, `/pricing` redirects): own key free, Qutai Credits packs 100 / 550 / 1,200 for $1 / $5 / $10… | Owner | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `WEB-3`, `WEB-10`
 

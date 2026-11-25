@@ -19,6 +19,7 @@ Last updated: 2026-11-26
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-26:** Website: a pricing page (`/en/pricing/`, `/tr/pricing/`): your own key is free; Qutai Credits come in packs of 100 credits for $1, 550 for $5 and 1,200 for $10 (`WEB-15`, `BUY-25`; owner).
 - **2026-11-26:** Mac and iPad keyboard: ⌘E opens and closes the assistant panel (`UI-89`, `UI-76`; owner).
 - **2026-11-26:** Mac and iPad keyboard: ↑/↓, Return and Esc in the address bar's suggestions (`UI-88`; owner).
 - **2026-11-26:** Mac: Downloads › ⋯ › "Save…" no longer closes at once and freezes the window: the save dialog waits for the ⋯ sheet to close (`DL-19`; owner's report).
