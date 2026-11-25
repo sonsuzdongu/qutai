@@ -126,7 +126,7 @@ export type Product = {
 const t = (en: string, tr: string): Text => ({ en, tr });
 const src = (path: string) => `${REPO}/blob/main/${path}`;
 
-/** Qutai: what is in the code today (not released; most features not yet tested on a real phone). */
+/** Qutai: what is in the code today (on Google Play, App Store in beta; not every feature tried on every device). */
 export const QUTAI: Product = {
   id: 'qutai',
   name: 'Qutai',
@@ -214,7 +214,7 @@ export const QUTAI: Product = {
       note: t('An encrypted backup file instead; optional sync is planned.', 'Yerine şifreli yedek dosyası; isteğe bağlı eşitleme planlanıyor.'),
       source: src('README.md'),
     },
-    availability: { state: 'no', note: t('In development, not released yet.', 'Geliştirme aşamasında, henüz yayımlanmadı.') },
+    availability: { state: 'yes', note: t('Google Play; the App Store in beta testing (TestFlight).', 'Google Play’de; App Store’da beta testinde (TestFlight).') },
     price: {
       state: 'yes',
       value: t('Free, open source', 'Ücretsiz, açık kaynak'),
