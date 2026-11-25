@@ -161,7 +161,7 @@ export const tr: Record<keyof typeof en, string> = {
   'working.answering': 'Yanıt yazılıyor…',
   'working.otherTab': 'Başka bir sekmede',
   'working.openHint': 'Tüm adımları açar',
-  'working.answerTitle': 'Qutai\'nin yanıtı',
+  'working.answerTitle': 'Qutai’ın yanıtı',
   'working.questionTitle': 'Qutai soruyor',
   'working.openChat': 'Sohbeti aç',
   'settings.showActionMarker': 'Asistanın nerede işlem yaptığını göster',

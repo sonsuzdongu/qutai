@@ -13,7 +13,8 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 const LETTERS = 'A-Za-zÇĞİÖŞÜçğıöşüÂâÎîÛû';
-const NAME_SUFFIX = new RegExp(`Qutai['’]([${LETTERS}]+)`, 'g');
+// An optional backslash: in a single-quoted string the apostrophe is written \' (Qutai\'nin slipped through once).
+const NAME_SUFFIX = new RegExp(`Qutai\\\\?['’]([${LETTERS}]+)`, 'g');
 
 /** Why a suffix written straight after "Qutai" breaks the rule, or null when it follows it. */
 export function suffixProblem(suffix: string): string | null {

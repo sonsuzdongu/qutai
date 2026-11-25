@@ -162,7 +162,7 @@ Bunlar düzeltilmeden gönderirseniz büyük olasılıkla ret alırsınız. Play
 ### 3.4 Asistanın web sitelerinde kullanıcı adına işlem yapması
 - **Mağaza:** her ikisi
 - **Kural:** Apple [5.2.2](https://developer.apple.com/app-store/review/guidelines/#intellectual-property) (üçüncü taraf hizmet şartları), [1.4](https://developer.apple.com/app-store/review/guidelines/#physical-harm), [2.5.14](https://developer.apple.com/app-store/review/guidelines/#software-requirements) (kayıt ya da kullanıcı etkinliğini izlemede açık rıza ve görünür gösterge). Play [Device and Network Abuse](https://support.google.com/googleplay/android-developer/answer/9888379): bir hizmete şartlarını ihlal ederek erişmek. Play politika takviminde 14 Nisan 2027 tarihli AppFunctions maddesi AI ajanlarını aldatmayı ve güvenliği aşmayı yasaklıyor (bize doğrudan değil, yönü gösteriyor). Apple'da "ajan" için özel bir madde yok.
-- **Bizde ne var:** Gönderi, mesaj, ödeme ve silme işlemleri her seferinde Qutai'nin kendi onay diyaloğundan geçiyor. Ödeme varsayılan olarak kapalı, "bir daha sorma" yok, tutar sayfadan okunuyor ve kontroller hata durumunda işlemi durduruyor **[kodda doğrulandı]**: `PAY-1` ile `PAY-28` ([07-posting-and-paying.md](design/07-posting-and-paying.md)). Ödeme diyalog metinleri ve sahte kartlı demo sitesi tanıtım videosunda kullanılıyor.
+- **Bizde ne var:** Gönderi, mesaj, ödeme ve silme işlemleri her seferinde Qutai'ın kendi onay diyaloğundan geçiyor. Ödeme varsayılan olarak kapalı, "bir daha sorma" yok, tutar sayfadan okunuyor ve kontroller hata durumunda işlemi durduruyor **[kodda doğrulandı]**: `PAY-1` ile `PAY-28` ([07-posting-and-paying.md](design/07-posting-and-paying.md)). Ödeme diyalog metinleri ve sahte kartlı demo sitesi tanıtım videosunda kullanılıyor.
 - **Olasılık:** düşük-orta. Tasarım iyi; risk, inceleme ekibinin "bot/otomasyon" diye yanlış anlaması **[tahmin]**.
 - **Çözüm:** İnceleme notunda onay akışını açıkça yazın (§5). Mağaza açıklamasında "her şeyi otomatik satın alır" gibi bir abartı olmasın. "Ödemeyi yalnızca siz onaylayınca yapar" deyin. Ekran görüntülerinde gerçek kart ya da marka olmasın (Apple 2.3.9: kurgusal veri).
 
@@ -280,7 +280,7 @@ ATT (izleme izni): gerekmez. Reklam ve izleme yok.
 - **İsteğe bağlı:** hassas veya yaklaşık konum; takvim etkinlikleri; ses (Google'ın konuşma hizmeti ses alıyorsa bu Google'ın hizmeti; Qutai yalnızca metin alıyor). Kişiler: isim AI'a gidiyorsa beyan edin.
 - **Paylaşım:** Anthropic ve RevenueCat sizin adınıza işleyen hizmet sağlayıcılarsa "sharing" sayılmaz (Play'in tanımı). Kendi anahtar modunda veri kullanıcının seçtiği sağlayıcıya gidiyor ve bu kullanıcının kendi eylemi. Hukukçunuzla netleştirin **[tahmin]**.
 - **Web tarama:** Play, açık web gezintisini veri toplama sayılmayan durumlar arasında sayıyor; tarama geçmişi telefonda kaldığı için beyan gerekmez.
-- **Güvenlik:** aktarım şifreli: **evet** (Qutai'nin kendi istekleri https; kullanıcının açtığı http sayfaları kendi tercihi). Silme isteği yolu: **evet**, uygulama içi ve 1.2'deki web sayfası.
+- **Güvenlik:** aktarım şifreli: **evet** (Qutai'ın kendi istekleri https; kullanıcının açtığı http sayfaları kendi tercihi). Silme isteği yolu: **evet**, uygulama içi ve 1.2'deki web sayfası.
 - **Reklam:** "Contains ads: No".
 - **İzin beyanları:** `REQUEST_INSTALL_PACKAGES`, her ön plan hizmeti türü (`mediaPlayback`, `dataSync`, `specialUse`) videolu; `READ_CONTACTS` için 2027'den sonra çekirdek özellik beyanı.
 
