@@ -345,7 +345,7 @@ Ekran görüntülerinde demo siteler ve test hesabı kullanın; gerçek adres, k
 > have them: once, always or never. You can see, edit and delete every memory in Settings, and lock one so the AI
 > only sees a label. Passwords, card numbers, one-time codes and IBANs are never kept, even if you ask.
 >
-> It's also a normal browser: tabs and groups, incognito tabs with a fingerprint lock, ad and tracker blocking,
+> It's also a normal browser: tabs and groups, incognito tabs with a biometric lock, ad and tracker blocking,
 > reader mode with read aloud, bookmark folders with Chrome import, an encrypted backup.
 >
 > Two ways to pay for the AI:
