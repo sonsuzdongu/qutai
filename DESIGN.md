@@ -19,6 +19,7 @@ Last updated: 2026-11-25
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-25:** The working light has square corners on Mac and iPad (`UI-75`).
 - **2026-11-25:** On a Mac or an iPad the address bar starts at the top (`UI-73`) and a desktop-style tab strip shows above it in windows at least 700 pt wide ("Show tabs in a strip", on by default, Mac and iPad only); phones and Android are unchanged (`UI-74`; owner's request).
 - **2026-11-25:** The new tab page shows sites' own icons, kept on the phone from visits in normal tabs (fetched only from the visited site, https, no cookies, weekly, cache folder, deleted with history or cached files); opening it still makes no request (`UI-72`, `UI-18` changed, `DATA-31`; owner's request).
 - **2026-11-25:** History can delete many visits at once: Select (or a long press), tick visits, "Select all" picks every visit on screen, Delete asks once and removes them all or none; a new search keeps only the chosen visits still on screen (`UI-71`; owner's request).

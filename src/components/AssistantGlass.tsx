@@ -11,6 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePalette } from '../ui/theme';
 import { useReduceMotion } from '../utils/useReduceMotion';
+import { stripDevice } from '../device/macDevice';
 
 /**
  * The assistant's look while listening and working (owner, 21 Nov 2026: "Işık" chosen after comparing three looks on a
@@ -308,7 +309,11 @@ function LevelDot({ level, still, color }: { level: number; still: boolean; colo
 
 /** How far in from each screen edge the travelling light is drawn, and the screen's corner it follows. */
 const EDGE_DEPTH = 82;
-const SCREEN_CORNER = 28;
+/**
+ * A phone's rounded screen corner; a Mac window and an iPad get square corners (UI-75: their window or screen edge reads
+ * as square, and a rounded light there looked detached from it).
+ */
+const SCREEN_CORNER = stripDevice === 'mac' || stripDevice === 'tablet' ? 0 : 28;
 
 /**
  * Working: a line of light travelling around the screen's edge, drawn in four thin edge canvases, so the page's
