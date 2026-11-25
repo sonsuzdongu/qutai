@@ -36,6 +36,7 @@ export const en = {
     'Qutai is a browser for iPhone, iPad, Mac with Apple silicon and Android whose assistant reads the page when you ask, and uses it for you.',
   'hero.github': 'View on GitHub',
   'hero.play': 'Get it on Google Play',
+  'hero.beta': 'iPhone, iPad and Mac beta',
   'hero.status': 'Out now on Google Play. In beta testing on the App Store for iPhone, iPad and Mac.',
 
   'hero.chip1': 'Reads your tabs',
@@ -62,9 +63,9 @@ export const en = {
   'agent.research.kicker': 'Search, read, cite',
 
   'start.kicker': 'Getting started',
-  'start.title': 'Three steps, once it is out.',
+  'start.title': 'Three steps to start.',
   'start.step1.title': 'Install Qutai',
-  'start.step1.body': 'Not in the stores yet: build it from the repository today, or follow the project on GitHub.',
+  'start.step1.body': 'On Android, from Google Play. On iPhone, iPad or a Mac with Apple silicon, join the beta through TestFlight, as described below.',
   'start.step2.title':
     'Choose how to reach the AI',
   'start.step2.body':
@@ -253,6 +254,13 @@ export const en = {
   'compare.correction': 'Report a correction',
   'compare.notes': 'Notes',
 
+  'beta.title': 'Join the beta on iPhone, iPad or Mac',
+  'beta.lede': 'Qutai is in beta testing on the App Store. You test it through TestFlight, Apple’s free app for beta versions:',
+  'beta.step1': 'Install TestFlight from the App Store on the iPhone, iPad or Mac where you want Qutai.',
+  'beta.step2': 'On that device, open the invitation link below and tap Accept, then Install.',
+  'beta.step3': 'Qutai appears like any other app. TestFlight offers each new beta version, and you can send feedback and screenshots from it.',
+  'beta.link': 'Open the TestFlight invitation',
+  'beta.note': 'A beta version stops working 90 days after it came out, so keep Qutai updated in TestFlight. On a Mac, Qutai needs Apple silicon.',
   'oss.kicker': 'Open source',
   'oss.title': 'Read every line. Build it yourself.',
   'oss.body':
@@ -295,6 +303,7 @@ export const en = {
   'footer.tagline': 'Agentic Browser',
   'footer.privacy':
     'This website makes no requests to other servers and sets no cookies, except one that remembers your language if you switch it.',
+  'footer.trademarks': 'Google Play and the Google Play logo are trademarks of Google LLC. Apple, iPhone, iPad, Mac, App Store and TestFlight are trademarks of Apple Inc.',
   'footer.licenseNote': 'The code is licensed under Apache-2.0.',
   'footer.github': 'GitHub',
   'footer.issues': 'Issues',

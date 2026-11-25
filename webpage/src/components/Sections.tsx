@@ -1,6 +1,6 @@
 import type { MessageKey } from '../i18n/en';
 import { useI18n } from '../lib/i18n';
-import { ISSUES_URL, LICENSE_URL, PLAY_URL, REPO_URL, deleteAccountPath, privacyPolicyPath, supportPath, termsPath } from '../lib/site';
+import { ISSUES_URL, LICENSE_URL, PLAY_URL, REPO_URL, TESTFLIGHT_URL, deleteAccountPath, privacyPolicyPath, supportPath, termsPath } from '../lib/site';
 import { Icon, type IconName } from './Icon';
 import { Miniature, type ArtName } from './Miniature';
 import { PhoneMock } from './PhoneMock';
@@ -61,7 +61,7 @@ export function Header({ page }: { page?: string } = {}) {
 }
 
 export function Hero() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const points: { key: MessageKey; icon: IconName }[] = [
     { key: 'hero.chip1', icon: 'tabs' },
     { key: 'hero.chip2', icon: 'bookmark' },
@@ -76,9 +76,12 @@ export function Hero() {
         <p className="tagline">{t('hero.tagline')}</p>
         <p className="lede">{t('hero.lede')}</p>
         <div className="hero-actions">
-          <a className="button primary" href={PLAY_URL}>
+          <a className="play-badge" href={PLAY_URL}>
+            <img src={`/img/google-play-${lang}.png`} alt={t('hero.play')} width={lang === 'tr' ? 646 : 564} height={lang === 'tr' ? 192 : 168} />
+          </a>
+          <a className="button primary" href="#beta">
             <Icon name="phone" size={20} />
-            {t('hero.play')}
+            {t('hero.beta')}
           </a>
           <a className="button secondary" href={REPO_URL}>
             <Icon name="github" size={20} />
@@ -419,6 +422,22 @@ export function GetStarted() {
             </li>
           ))}
         </ol>
+        <div id="beta" className="beta reveal">
+          <h3>{t('beta.title')}</h3>
+          <p>{t('beta.lede')}</p>
+          <ol>
+            <li>{t('beta.step1')}</li>
+            <li>{t('beta.step2')}</li>
+            <li>{t('beta.step3')}</li>
+          </ol>
+          <p className="beta-actions">
+            <a className="button primary" href={TESTFLIGHT_URL}>
+              {t('beta.link')}
+              <Icon name="external" size={18} />
+            </a>
+          </p>
+          <p className="beta-note">{t('beta.note')}</p>
+        </div>
       </div>
     </section>
   );
@@ -547,6 +566,7 @@ export function Footer() {
         </ul>
         <p className="footer-note">{t('footer.privacy')}</p>
         <p className="footer-note">{t('footer.licenseNote')}</p>
+        <p className="footer-note">{t('footer.trademarks')}</p>
       </div>
     </footer>
   );

@@ -36,6 +36,7 @@ export const tr: Messages = {
   'hero.lede': 'Qutai, istediğinizde sayfayı okuyup sizin için kullanan bir asistanla gelen iPhone, iPad, Apple silicon işlemcili Mac ve Android tarayıcısı.',
   'hero.github': 'GitHub’da inceleyin',
   'hero.play': 'Google Play’den indirin',
+  'hero.beta': 'iPhone, iPad ve Mac betası',
   'hero.status': 'Google Play’de yayında. iPhone, iPad ve Mac için App Store’da beta testinde.',
 
   'hero.chip1': 'Sekmeleri okur',
@@ -62,9 +63,9 @@ export const tr: Messages = {
   'agent.research.kicker': 'Ara, oku, kaynak göster',
 
   'start.kicker': 'Başlarken',
-  'start.title': 'Yayımlandığında üç adımda başlarsınız.',
+  'start.title': 'Üç adımda başlayın.',
   'start.step1.title': 'Qutai’ı kurun',
-  'start.step1.body': 'Henüz mağazalarda yok: bugün depodan derleyebilir ya da projeyi GitHub’dan takip edebilirsiniz.',
+  'start.step1.body': 'Android’de Google Play’den. iPhone, iPad ya da Apple silicon işlemcili Mac’te aşağıda anlatıldığı gibi TestFlight üzerinden betaya katılın.',
   'start.step2.title':
     'Yapay zekâya nasıl bağlanacağını seçin',
   'start.step2.body':
@@ -261,6 +262,13 @@ export const tr: Messages = {
   'compare.correction': 'Düzeltme bildirin',
   'compare.notes': 'Notlar',
 
+  'beta.title': 'iPhone, iPad ya da Mac’te betaya katılın',
+  'beta.lede': 'Qutai, App Store’da beta testinde. Apple’ın beta sürümler için ücretsiz uygulaması TestFlight ile deneyebilirsiniz:',
+  'beta.step1': 'Qutai’ı kullanmak istediğiniz iPhone, iPad ya da Mac’e App Store’dan TestFlight’ı yükleyin.',
+  'beta.step2': 'Aynı cihazda aşağıdaki davet bağlantısını açın; Kabul Et’e, ardından Yükle’ye dokunun.',
+  'beta.step3': 'Qutai diğer uygulamalar gibi görünür. Her yeni beta sürümü TestFlight’ta çıkar; geri bildirimi ve ekran görüntülerini de oradan gönderebilirsiniz.',
+  'beta.link': 'TestFlight davetini açın',
+  'beta.note': 'Bir beta sürümü yayımlanmasından 90 gün sonra çalışmayı bırakır; bu yüzden Qutai’ı TestFlight’tan güncel tutun. Mac’te Qutai için Apple silicon işlemci gerekir.',
   'oss.kicker': 'Açık kaynak',
   'oss.title': 'Her satırını okuyun, kendiniz derleyin.',
   'oss.body':
@@ -312,6 +320,7 @@ export const tr: Messages = {
   'footer.tagline': 'Agentic Browser',
   'footer.privacy':
     'Bu site başka sunuculara istek göndermez, çerez de kullanmaz; yalnızca dili değiştirirseniz seçiminizi hatırlamak için bir çerez bırakır.',
+  'footer.trademarks': 'Google Play ve Google Play logosu Google LLC’nin ticari markalarıdır. Apple, iPhone, iPad, Mac, App Store ve TestFlight Apple Inc.’in ticari markalarıdır.',
   'footer.licenseNote': 'Kod Apache-2.0 lisanslıdır.',
   'footer.github': 'GitHub',
   'footer.issues': 'Sorun bildirin',

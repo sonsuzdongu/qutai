@@ -6,6 +6,8 @@ export const SITE_URL = 'https://qutai.sonsuzdongu.com';
 export const REPO_URL = 'https://github.com/sonsuzdongu/qutai';
 /** The app on Google Play. The App Store is in beta testing; no public link yet. */
 export const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.sonsuzdongu.qutai';
+/** The App Store beta: TestFlight's public invitation link (iPhone, iPad and Mac). */
+export const TESTFLIGHT_URL = 'https://testflight.apple.com/join/q6QvR9Wx';
 export const ISSUES_URL = `${REPO_URL}/issues`;
 export const LICENSE_URL = `${REPO_URL}/blob/main/LICENSE`;
 /** The app's privacy policy, a page of this site in each language (scripts/prerender.mjs, text from the app). */
