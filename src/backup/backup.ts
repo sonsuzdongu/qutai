@@ -38,8 +38,75 @@ export { MIN_BACKUP_PASSWORD } from './server/logic';
 
 export type ExportOptions = ExportChoice & { apiKeys: boolean };
 
-/** The preferences that go into a backup (locks, first-run and legal state stay with the phone). */
-function backupSettings(s: Settings): BackupSettings {
+/**
+ * Where each setting goes in a backup (DATA-3, DATA-5): 'backup' travels in every backup (backupSettings, mergeSettings and
+ * payload.ts's BOOLEAN_SETTINGS / parseSettings agree with it, scripts/backup-tests/policy.test.ts), 'keys' only when
+ * the user includes the API keys, 'phone' never leaves this phone. A Record over every key of Settings, so a new
+ * setting doesn't compile until someone decides where it goes.
+ */
+export const BACKUP_POLICY = {
+  provider: 'backup',
+  apiKeys: 'keys',
+  models: 'backup',
+  customBaseUrl: 'backup',
+  customImages: 'phone',
+  customHeaders: 'keys',
+  confirmActions: 'backup',
+  // Permissions the user gave on this phone (PAY-7, SCR-*, "Don't ask again"): each phone is asked again.
+  alwaysAllow: 'phone',
+  assistantPayments: 'phone',
+  assistantScripts: 'phone',
+  scriptSites: 'phone',
+  searchEngine: 'backup',
+  searchSuggestions: 'backup',
+  textZoom: 'backup',
+  memoryEnabled: 'backup',
+  customInstructions: 'backup',
+  webSearch: 'backup',
+  blockAds: 'backup',
+  hideCookieBanners: 'backup',
+  blockVideoAds: 'backup',
+  theme: 'backup',
+  addressBarPosition: 'backup',
+  haptics: 'backup',
+  httpsOnly: 'backup',
+  blockThirdPartyCookies: 'backup',
+  // The locks stay with the phone (INC-27).
+  appLock: 'phone',
+  incognitoLock: 'phone',
+  showAssistantButton: 'backup',
+  forceZoom: 'backup',
+  backgroundPlayback: 'backup',
+  autoplaySound: 'backup',
+  pictureInPicture: 'backup',
+  backgroundTasks: 'phone',
+  notifyTaskDone: 'phone',
+  geminiStreaming: 'phone',
+  showCost: 'phone',
+  showActionMarker: 'phone',
+  readerTheme: 'backup',
+  readerFont: 'backup',
+  readerEasyReading: 'backup',
+  voiceAutoSend: 'backup',
+  // The answer about the phone's online speech service: each phone asks again.
+  voiceOnline: 'phone',
+  voiceLanguage: 'phone',
+  voiceLastLanguage: 'phone',
+  voiceHoldToTalk: 'backup',
+  // First-run and legal state stay with the phone.
+  onboarded: 'phone',
+  legalAcceptedVersion: 'phone',
+} as const satisfies Record<keyof Settings, 'backup' | 'keys' | 'phone'>;
+
+type Policy = typeof BACKUP_POLICY;
+/** The settings BACKUP_POLICY sends in every backup. */
+export type BackedUpSetting = { [K in keyof Policy]: Policy[K] extends 'backup' ? K : never }[keyof Policy];
+/** Every backed-up setting has a place in the backup payload, and the payload carries no other setting. */
+type Same<A, B> = [A] extends [B] ? ([B] extends [A] ? true : false) : false;
+export const POLICY_MATCHES_PAYLOAD: Same<BackedUpSetting, Exclude<keyof BackupSettings, 'retiredInstructionsRemoved'>> = true;
+
+/** The preferences that go into a backup (BACKUP_POLICY 'backup'; locks, first-run and legal state stay with the phone). */
+export function backupSettings(s: Settings): BackupSettings {
   return {
     provider: s.provider,
     models: { ...s.models },

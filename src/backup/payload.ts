@@ -424,7 +424,8 @@ function parseSites(v: unknown): BackupPayload['sites'] {
   };
 }
 
-const BOOLEAN_SETTINGS = [
+/** The backed-up settings that are booleans (BACKUP_POLICY in backup.ts; scripts/backup-tests/policy.test.ts checks they agree). */
+export const BOOLEAN_SETTINGS = [
   'confirmActions',
   'searchSuggestions',
   'memoryEnabled',
