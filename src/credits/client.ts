@@ -85,10 +85,18 @@ const INTRO_TIMEOUT_MS = 40_000;
 const ORGANISE_TIMEOUT_MS = 55_000;
 /** The server waits up to 10 s for RevenueCat. */
 const VERIFY_TIMEOUT_MS = 20_000;
-/** Refusals worth waiting for (our own previous step still settling, a short rate limit, a busy provider). */
-const WAITABLE: ReadonlySet<RelayErrorKind> = new Set(['task_active', 'rate_limited', 'upstream_unavailable']);
+/** Refusals worth waiting for when the wait is short (a short rate limit, a busy provider). */
+const WAITABLE: ReadonlySet<RelayErrorKind> = new Set(['rate_limited', 'upstream_unavailable']);
 const MAX_WAIT_SECONDS = 20;
 const MAX_WAITS = 2;
+/**
+ * `task_active`: the account's one task slot is taken, most often by our own previous step still settling (the server
+ * keeps reading a stopped answer for up to 15 s to charge it), or by a request whose server died: its hold is a 60 s
+ * lease that runs out unrenewed (backend README › Relay › Reservations › Lease). Asked again every few seconds (at most
+ * the server's Retry-After) for up to this long in all, which covers both; only a task really running elsewhere outlasts it.
+ */
+const TASK_ACTIVE_WAIT_SECONDS = 70;
+const TASK_ACTIVE_POLL_SECONDS = 10;
 const MAX_NETWORK_RETRIES = 2;
 
 const defaultSleep = (ms: number, signal?: AbortSignal) =>
@@ -190,6 +198,7 @@ export function createCreditsClient(options: CreditsClientOptions) {
     // the provider refuses (400, "unexpected end of hex escape"): replaced here (utils/wellFormed.ts).
     const payload = wellFormedJson(body);
     let waits = 0;
+    let busyWaited = 0;
     let networkRetries = 0;
     for (;;) {
       if (signal.aborted) throw abortError();
@@ -225,6 +234,13 @@ export function createCreditsClient(options: CreditsClientOptions) {
       }
       const error = await errorFrom(res);
       options.deviceProof?.observe(res.status, res.headers, error.reason ?? null);
+      if (error.kind === 'task_active' && busyWaited < TASK_ACTIVE_WAIT_SECONDS) {
+        const seconds = Math.max(1, Math.min(error.retryAfter ?? 5, TASK_ACTIVE_POLL_SECONDS, TASK_ACTIVE_WAIT_SECONDS - busyWaited));
+        busyWaited += seconds;
+        await sleep(seconds * 1000, signal);
+        if (signal.aborted) throw abortError();
+        continue;
+      }
       if (WAITABLE.has(error.kind) && waits < MAX_WAITS && (error.retryAfter ?? 5) <= MAX_WAIT_SECONDS) {
         waits++;
         await sleep((error.retryAfter ?? 5) * 1000, signal);

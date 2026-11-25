@@ -1146,12 +1146,13 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-42` | Margin set in the panel as a percentage with a live example; first values 100 credits per dollar and 100 %. | Owner | 2026-11-20 |
 | `CRED-43` | Every panel setting is a form in human units with "What will change"; JSON only under Advanced; emergency controls first. | Owner | 2026-11-20 |
 | `CRED-44` | The app never shows which model is behind Qutai Credits (no "Answered by" in the cost details or the sent log, no model label). | Owner | 2026-11-20 |
-| `CRED-45` | One reservation scope inside waitUntil: exactly one settle or cancel; the app leaving can't keep the hold and the lock. | Default | 2026-11-20 |
+| `CRED-45` | One reservation scope inside waitUntil: exactly one settle or cancel; the app leaving can't keep the hold and the lock (expiry now a 60 s lease, `CRED-51`). | Default | 2026-11-26 |
 | `CRED-46` | The account prunes retry-only rows daily: relay keys and finished reservations after 30 days, other keys after 400; never the ledger. | Default | 2026-11-20 |
 | `CRED-47` | Qutai's server relays Anthropic only (seam kept); own OpenAI, Gemini, OpenRouter and custom keys in the app are unaffected. | Owner | 2026-11-20 |
 | `CRED-48` | A step the balance can't hold is shortened to fit (fewer searches down to 1, then output down to `minOutputTokens`), refused only below that. | Owner | 2026-11-22 |
 | `CRED-49` | The free introduction runs on its own key and table: no credits, apart from paid usage, counted in the spend limit; own Usage section. | Owner | 2026-11-22 |
 | `CRED-50` | `POST /relay/organise-memory`: server-owned instructions, facts in, `{ moves }` out; paid like a relay step, usage `purpose` in the panel. | Owner | 2026-11-23 |
+| `CRED-51` | A reservation is a 60 s lease renewed every 20 s while the request runs (cap: longest request); a dead server's hold goes back within 60 s; the app waits up to 70 s on `task_active`. | Owner | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 

@@ -103,7 +103,8 @@ const REFUSALS: [string, number, RelayErrorKind, Record<string, string>?][] = [
 
 for (const [code, status, kind, headers] of REFUSALS) {
   test(`refusal ${code} → ${kind}, nothing charged`, async () => {
-    const server = fakeServer({ relay: [error(code, status, {}, headers)] });
+    // task_active is asked again for up to 70 s first (a fresh answer each time).
+    const server = fakeServer({ relay: Array.from({ length: code === 'task_active' ? 12 : 1 }, () => error(code, status, {}, headers)) });
     if (code === 'unauthorized') server.expireToken(true);
     await assert.rejects(server.client().relayStream(BODY, signal(), () => {}), (e: unknown) => {
       assert.ok(e instanceof RelayError);
@@ -152,9 +153,28 @@ test('the relay’s own short waits are waited out, then the request goes throug
 });
 
 test('a long wait isn’t waited out: the user is told', async () => {
-  const server = fakeServer({ relay: [error('task_active', 409, {}, { 'Retry-After': '120' })] });
-  await assert.rejects(server.client().relayStream(BODY, signal(), () => {}), (e: unknown) => e instanceof RelayError && e.kind === 'task_active');
+  const server = fakeServer({ relay: [error('rate_limited', 429, {}, { 'Retry-After': '120' })] });
+  await assert.rejects(server.client().relayStream(BODY, signal(), () => {}), (e: unknown) => e instanceof RelayError && e.kind === 'rate_limited');
   assert.equal(server.relayRequests().length, 1);
+});
+
+test('task_active: asked again every few seconds for up to 70 s (a stopped step settling, a lapsed 60 s lease)', async () => {
+  const busy = () => error('task_active', 409, {}, { 'Retry-After': '45' });
+  const freed = fakeServer({ relay: [busy(), busy(), busy(), sse([settlement(4)])] });
+  const waits: number[] = [];
+  const charge = await freed.client({ sleep: async (ms) => void waits.push(ms) }).relayStream(BODY, signal(), () => {});
+  assert.equal(charge.charged, 4);
+  assert.deepEqual(waits, [10_000, 10_000, 10_000]);
+
+  // A task really running elsewhere: after 70 s in all, the user is told.
+  const taken = fakeServer({ relay: Array.from({ length: 12 }, busy) });
+  const waited: number[] = [];
+  await assert.rejects(
+    taken.client({ sleep: async (ms) => void waited.push(ms) }).relayStream(BODY, signal(), () => {}),
+    (e: unknown) => e instanceof RelayError && e.kind === 'task_active',
+  );
+  assert.equal(waited.reduce((a, b) => a + b, 0), 70_000);
+  assert.equal(taken.relayRequests().length, 8);
 });
 
 test('an expired access token is renewed once and the request repeated', async () => {
