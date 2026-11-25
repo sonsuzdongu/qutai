@@ -19,6 +19,7 @@ Last updated: 2026-11-25
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-25:** Checked: Payment Request, Google Pay and Apple Pay buttons never hang in Qutai and pages fall back to their own checkout; nothing changed (`WPERM-19`).
 - **2026-11-25:** Checked: "Copy" buttons on pages already work on both platforms and pages still can't read the clipboard without the user; nothing changed (`WPERM-18`).
 - **2026-11-25:** Sites, routers and intranet pages that ask for a user name and password (HTTP Basic/Digest) get Qutai's own sign-in dialog; nothing keeps the password (`WPERM-17`).
 - **2026-11-25:** Windows a page opens are real pop-ups that keep `window.opener` and close themselves back to the opener, so "Sign in with Google" and payment windows no longer end on a blank page; Android's `X-Requested-With` header can't be turned off any more (`TABS-34`).

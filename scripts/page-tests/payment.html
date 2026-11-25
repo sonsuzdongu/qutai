@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Qutai page tests: payments</title>
+<style>
+  body { font: 16px/1.4 system-ui, sans-serif; margin: 16px; }
+  button { display: block; width: 100%; margin: 0 0 10px; padding: 12px; font-size: 16px; }
+  #log li { margin: 0 0 4px; word-break: break-word; }
+</style>
+</head>
+<body>
+<!--
+  What a checkout's "Google Pay / Apple Pay / Buy now" button finds in Qutai (Payment Request API). Served by
+  serve.mjs at /payment. No real payment: the request uses Google Pay's TEST environment and Apple Pay's demo
+  merchant id, and nothing is ever confirmed. Each line says what the API answered and how long it took; a line that
+  says "no answer after 5 s" is a hang a page would show as a dead button.
+-->
+<h1>Payment tests</h1>
+<button id="show">Tap: PaymentRequest.show()</button>
+<button id="gpay">Tap: Google Pay loadPaymentData (TEST)</button>
+<ol id="log"></ol>
+<script>
+(function () {
+  function line(t) { var li = document.createElement('li'); li.textContent = t; document.getElementById('log').appendChild(li); }
+  function timed(label, p) {
+    var start = Date.now(), done = false;
+    setTimeout(function () { if (!done) line(label + ': no answer after 5 s'); }, 5000);
+    return Promise.resolve(p).then(
+      function (v) { done = true; line(label + ' → ' + JSON.stringify(v) + ' (' + (Date.now() - start) + ' ms)'); },
+      function (e) { done = true; line(label + ' ✗ ' + (e && (e.name + ': ' + e.message)) + ' (' + (Date.now() - start) + ' ms)'); }
+    );
+  }
+  line('window.PaymentRequest: ' + typeof window.PaymentRequest);
+  line('window.ApplePaySession: ' + typeof window.ApplePaySession);
+  if (window.ApplePaySession) {
+    try { line('ApplePaySession.canMakePayments(): ' + ApplePaySession.canMakePayments()); } catch (e) { line('ApplePaySession.canMakePayments ✗ ' + e.name + ': ' + e.message); }
+  }
+  var methods = [
+    { supportedMethods: 'https://google.com/pay', data: { environment: 'TEST', apiVersion: 2, apiVersionMinor: 0,
+      allowedPaymentMethods: [{ type: 'CARD', parameters: { allowedAuthMethods: ['PAN_ONLY'], allowedCardNetworks: ['VISA', 'MASTERCARD'] },
+        tokenizationSpecification: { type: 'PAYMENT_GATEWAY', parameters: { gateway: 'example', gatewayMerchantId: 'exampleGatewayMerchantId' } } }],
+      merchantInfo: { merchantName: 'Qutai test' } } },
+    { supportedMethods: 'https://apple.com/apple-pay', data: { version: 3, merchantIdentifier: 'merchant.com.example.test',
+      merchantCapabilities: ['supports3DS'], supportedNetworks: ['visa', 'masterCard'], countryCode: 'US' } },
+  ];
+  var details = { total: { label: 'Test', amount: { currency: 'USD', value: '0.01' } } };
+  function request() { return new PaymentRequest(methods, details); }
+  if (window.PaymentRequest) {
+    try {
+      var r = request();
+      timed('canMakePayment()', r.canMakePayment());
+      if (r.hasEnrolledInstrument) timed('hasEnrolledInstrument()', request().hasEnrolledInstrument());
+      else line('hasEnrolledInstrument: missing');
+    } catch (e) { line('new PaymentRequest ✗ ' + e.name + ': ' + e.message); }
+  }
+  var s = document.createElement('script');
+  s.src = 'https://pay.google.com/gp/p/js/pay.js';
+  var client = null;
+  document.getElementById('gpay').onclick = function () {
+    if (!client) return line('Google Pay: pay.js not loaded');
+    var req = { apiVersion: 2, apiVersionMinor: 0, allowedPaymentMethods: [methods[0].data.allowedPaymentMethods[0]],
+      merchantInfo: { merchantName: 'Qutai test' },
+      transactionInfo: { totalPriceStatus: 'FINAL', totalPrice: '0.01', currencyCode: 'USD', countryCode: 'US' } };
+    timed('Google Pay loadPaymentData', client.loadPaymentData(req).then(function () { return 'a test token'; }));
+  };
+  s.onload = function () {
+    try {
+      client = new google.payments.api.PaymentsClient({ environment: 'TEST' });
+      timed('Google Pay isReadyToPay', client.isReadyToPay({ apiVersion: 2, apiVersionMinor: 0, allowedPaymentMethods: [methods[0].data.allowedPaymentMethods[0]] }));
+    } catch (e) { line('PaymentsClient ✗ ' + e.name + ': ' + e.message); }
+  };
+  s.onerror = function () { line('pay.js did not load'); };
+  document.head.appendChild(s);
+  document.getElementById('show').onclick = function () {
+    if (!window.PaymentRequest) return line('show(): no PaymentRequest, a page takes its normal checkout');
+    var r;
+    try { r = request(); } catch (e) { return line('new PaymentRequest ✗ ' + e.name); }
+    timed('show()', r.show().then(function (resp) { resp.complete('fail'); return 'a response (completed as fail)'; }));
+    setTimeout(function () { try { r.abort(); } catch (e) {} }, 8000);
+  };
+})();
+</script>
+</body>
+</html>
