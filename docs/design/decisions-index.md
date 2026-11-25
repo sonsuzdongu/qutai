@@ -925,7 +925,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-73` | On a Mac or an iPad the address bar starts at the top (bottom on phones, by device type); a stored or restored choice is never changed. | Owner | 2026-11-25 |
 | `UI-74` | Mac and iPad only (never phones or Android): a tab strip right above the address bar, top or bottom, in windows ≥ 700 pt, setting on by default: current kind's tabs, icon, title, ×, +, group labels that fold. | Owner | 2026-11-25 |
 | `UI-75` | The working light has rounded corners on phones, square on Mac and iPad. | Owner | 2026-11-25 |
-| `UI-76` | Mac and iPad keyboard shortcuts: ⌘T, ⌘⇧N, ⌘W, ⌘⇧T, ⌘R, ⌘L, ⌘F, ⌘[ ⌘], ⌘1…9, ⌃Tab/⌃⇧Tab; text editing keys never taken; ⌘L/⌘F/⌘R stay Qutai's in page fields. | Owner | 2026-11-25 |
+| `UI-76` | Mac and iPad keyboard shortcuts: ⌘T, ⌘⇧N, ⌘W, ⌘⇧T, ⌘R, ⌘L, ⌘F, ⌘[ ⌘], ⌘1…9, ⌃Tab/⌃⇧Tab, ⌘+ ⌘− ⌘0 (`UI-84`); text editing keys never taken; ⌘L/⌘F/⌘R stay Qutai's in page fields. | Owner | 2026-11-25 |
 | `UI-77` | Mac only: no iPad-style input bar under focused page or mini-app fields, and the layout ignores the reported keyboard; iPad and iPhone unchanged. | Owner | 2026-11-25 |
 | `UI-78` | "Clear history" sits above the History list, always reachable. | Owner | 2026-11-25 |
 | `UI-79` | Mac only: no phantom top/bottom safe-area insets (status bar, home indicator), so content starts right under the title bar; iPhone and iPad unchanged. | Owner | 2026-11-25 |
@@ -933,6 +933,7 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-81` | Mac and iPad: ⌥Space is the Qutai button's push-to-talk (listens only while held, release sends; the microphone starts after 300 ms held, quicker presses do nothing; focus loss cancels), only where the button's hold would listen; the Mac's Qutai button tour mentions it. | Owner | 2026-11-25 |
 | `UI-82` | Address bar: history and the search engine are asked only after a 350 ms pause in typing. | Owner | 2026-11-25 |
 | `UI-83` | A new blank tab opens with the cursor in the address bar (not at launch or behind the incognito lock). | Owner | 2026-11-26 |
+| `UI-84` | Page zoom: a Mac starts pages at 1.299 (macOS draws iPad apps at 77%) so they match Safari; ⌘+ / ⌘− / ⌘0 in Safari's steps (50–300%), remembered per site; × Settings text size. | Owner | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `UI-2`, `UI-3`, `UI-5`, `UI-6`, `UI-7`, `UI-8`, `UI-11`, `UI-13`, `UI-20`
 

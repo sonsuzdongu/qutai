@@ -12,7 +12,7 @@ import { stripDevice } from './macDevice';
  * or on Android, and nothing on a binary built before the native method existed.
  */
 type NativeShortcuts = {
-  setKeyShortcuts?(items: { id: string; input: string; modifiers: string[]; title: string }[]): void;
+  setKeyShortcuts?(items: { id: string; input: string; modifiers: string[]; title: string; hidden: boolean }[]): void;
   addListener?(event: 'onShortcut', listener: (event: { id?: unknown }) => void): { remove(): void };
 };
 
@@ -38,6 +38,7 @@ export function useKeyShortcuts(onShortcut: (id: ShortcutEvent) => void) {
           input: s.input,
           modifiers: s.modifiers,
           title: t(s.title.key, s.title.values),
+          hidden: s.hidden === true,
         })),
       );
     } catch {

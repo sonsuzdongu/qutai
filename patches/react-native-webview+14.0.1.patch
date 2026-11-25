@@ -2039,7 +2039,7 @@ index 0000000..f425960
 +    rctEventEmitter.receiveEvent(viewTag, eventName, mEventData)
 +}
 diff --git a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
-index fa8efb8..ebc878a 100644
+index fa8efb8..a697031 100644
 --- a/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 +++ b/node_modules/react-native-webview/android/src/newarch/com/reactnativecommunity/webview/RNCWebViewManager.java
 @@ -23,6 +23,8 @@ import com.reactnativecommunity.webview.events.TopLoadingProgressEvent;
@@ -2133,7 +2133,18 @@ index fa8efb8..ebc878a 100644
      @Override
      @ReactProp(name = "injectedJavaScript")
      public void setInjectedJavaScript(RNCWebViewWrapper view, @Nullable String value) {
-@@ -429,6 +506,13 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+@@ -396,6 +473,10 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+     @Override
+     public void setPagingEnabled(RNCWebViewWrapper view, boolean value) {}
+ 
++    // Qutai patch: iOS only (WKWebView page zoom).
++    @Override
++    public void setPageZoom(RNCWebViewWrapper view, double value) {}
++
+     @Override
+     public void setPullToRefreshEnabled(RNCWebViewWrapper view, boolean value) {}
+ 
+@@ -429,6 +510,13 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
      @Override
      public void setMediaCapturePermissionGrantType(RNCWebViewWrapper view, @Nullable String value) {}
  
@@ -2147,7 +2158,7 @@ index fa8efb8..ebc878a 100644
      @Override
      public void setFraudulentWebsiteWarningEnabled(RNCWebViewWrapper view, boolean value) {}
      /* !iOS PROPS - no implemented here */
-@@ -537,6 +621,12 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
+@@ -537,6 +625,12 @@ public class RNCWebViewManager extends ViewGroupManager<RNCWebViewWrapper>
          export.put(ScrollEventType.getJSEventName(ScrollEventType.SCROLL), MapBuilder.of("registrationName", "onScroll"));
          export.put(TopHttpErrorEvent.EVENT_NAME, MapBuilder.of("registrationName", "onHttpError"));
          export.put(TopRenderProcessGoneEvent.EVENT_NAME, MapBuilder.of("registrationName", "onRenderProcessGone"));
@@ -2430,7 +2441,7 @@ index 07f2eee..695f08d 100644
          return mRNCWebViewModuleImpl.startPhotoPickerIntent(acceptTypes, allowMultiple, callback, isCaptureEnabled);
      }
 diff --git a/node_modules/react-native-webview/apple/RNCWebView.mm b/node_modules/react-native-webview/apple/RNCWebView.mm
-index 2be7877..d2479f3 100644
+index 2be7877..8743fb1 100644
 --- a/node_modules/react-native-webview/apple/RNCWebView.mm
 +++ b/node_modules/react-native-webview/apple/RNCWebView.mm
 @@ -190,6 +190,29 @@ - (instancetype)initWithFrame:(CGRect)frame
@@ -2473,7 +2484,7 @@ index 2be7877..d2479f3 100644
                      };
                      webViewEventEmitter->onOpenWindow(data);
                  }
-@@ -467,7 +491,34 @@ - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &
+@@ -467,7 +491,38 @@ - (void)updateProps:(Props::Shared const &)props oldProps:(Props::Shared const &
      }
  #endif
  
@@ -2488,6 +2499,10 @@ index 2be7877..d2479f3 100644
 +    // Qutai patch: the key of this WebView's data store (cookie list).
 +    if (oldViewProps.webviewProfile != newViewProps.webviewProfile) {
 +        [_view setWebviewProfile:RCTNSStringFromString(newViewProps.webviewProfile)];
++    }
++    // Qutai patch: the page zoom (WKWebView.pageZoom).
++    if (oldViewProps.pageZoom != newViewProps.pageZoom) {
++        [_view setPageZoom:newViewProps.pageZoom];
 +    }
 +    // Qutai patch: network ad and tracker blocking.
 +    if (oldViewProps.contentBlocking != newViewProps.contentBlocking) {
@@ -2509,16 +2524,18 @@ index 2be7877..d2479f3 100644
          if (newViewProps.mediaCapturePermissionGrantType == RNCWebViewMediaCapturePermissionGrantType::Prompt) {
              [_view setMediaCapturePermissionGrantType:RNCWebViewPermissionGrantType_Prompt];
 diff --git a/node_modules/react-native-webview/apple/RNCWebViewImpl.h b/node_modules/react-native-webview/apple/RNCWebViewImpl.h
-index 1f637c1..ee7a968 100644
+index 1f637c1..98efda8 100644
 --- a/node_modules/react-native-webview/apple/RNCWebViewImpl.h
 +++ b/node_modules/react-native-webview/apple/RNCWebViewImpl.h
-@@ -132,8 +132,32 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
+@@ -132,8 +132,34 @@ shouldStartLoadForRequest:(NSMutableDictionary<NSString *, id> *)request
  @property (nonatomic, assign) BOOL textInteractionEnabled;
  #endif
  
 +// Qutai patch: network ad and tracker blocking with compiled WebKit content rule lists (identifiers one per line,
 +// see RNCWebViewModule compileContentRuleList), not attached while the top-level page is on one of the off sites.
 +@property (nonatomic, assign) BOOL contentBlocking;
++// Qutai patch: WKWebView.pageZoom (iOS 14+; 1 = 100%), applied now and to a WebView created later.
++@property (nonatomic, assign) CGFloat pageZoom;
 +@property (nonatomic, copy) NSString * _Nullable contentBlockingOffSites;
 +@property (nonatomic, copy) NSString * _Nullable contentRuleLists;
 +// Qutai patch: real pop-ups. A page's new window is created at once (WebKit needs it before the app's tab exists) and
@@ -2546,7 +2563,7 @@ index 1f637c1..ee7a968 100644
  
  #if !TARGET_OS_OSX
 diff --git a/node_modules/react-native-webview/apple/RNCWebViewImpl.m b/node_modules/react-native-webview/apple/RNCWebViewImpl.m
-index 3890426..2dea463 100644
+index 3890426..7efc3d6 100644
 --- a/node_modules/react-native-webview/apple/RNCWebViewImpl.m
 +++ b/node_modules/react-native-webview/apple/RNCWebViewImpl.m
 @@ -114,6 +114,25 @@ - (void)scrollWheel:(NSEvent *)theEvent {
@@ -2703,13 +2720,16 @@ index 3890426..2dea463 100644
      [self setBackgroundColor: _savedBackgroundColor];
  #if !TARGET_OS_OSX
      // Apply once at creation time. The prop is documented as non-reactive —
-@@ -585,10 +687,15 @@ - (void)didMoveToWindow
+@@ -585,10 +687,18 @@ - (void)didMoveToWindow
        _webView.inspectable = _webviewDebuggingEnabled;
  #endif
  
 +    // Qutai patch: a new WebView (and user content controller) gets the content rule lists before it loads.
 +    _attachedContentRuleLists = nil;
 +    [self applyContentRuleListsForURL:nil];
++
++    // Qutai patch: the page zoom set before the WebView existed.
++    [self applyPageZoom];
 +
      [self addSubview:_webView];
      [self setHideKeyboardAccessoryView: _savedHideKeyboardAccessoryView];
@@ -2720,7 +2740,7 @@ index 3890426..2dea463 100644
    }
  
  #if !TARGET_OS_OSX
-@@ -627,6 +734,8 @@ - (void)destroyWebView
+@@ -627,6 +737,8 @@ - (void)destroyWebView
  - (void)removeFromSuperview
  #endif
  {
@@ -2729,7 +2749,7 @@ index 3890426..2dea463 100644
    if (_webView) {
      [_webView.configuration.userContentController removeScriptMessageHandlerForName:HistoryShimName];
      [_webView.configuration.userContentController removeScriptMessageHandlerForName:MessageHandlerName];
-@@ -1205,9 +1314,56 @@ - (void)                    webView:(WKWebView *)webView
+@@ -1205,9 +1317,56 @@ - (void)                    webView:(WKWebView *)webView
        return;
      }
    }
@@ -2786,7 +2806,7 @@ index 3890426..2dea463 100644
  #pragma mark - WKNavigationDelegate methods
  
  /**
-@@ -1300,6 +1456,28 @@ - (void)webView:(WKWebView *)webView runJavaScriptTextInputPanelWithPrompt:(NSSt
+@@ -1300,6 +1459,28 @@ - (void)webView:(WKWebView *)webView runJavaScriptTextInputPanelWithPrompt:(NSSt
  }
  
  #if defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 150000 /* iOS 15 */
@@ -2815,7 +2835,7 @@ index 3890426..2dea463 100644
  /**
   * Media capture permissions (prevent multiple prompts)
   */
-@@ -1308,6 +1486,10 @@ - (void)                         webView:(WKWebView *)webView
+@@ -1308,6 +1489,10 @@ - (void)                         webView:(WKWebView *)webView
                          initiatedByFrame:(WKFrameInfo *)frame
                                      type:(WKMediaCaptureType)type
                           decisionHandler:(void (^)(WKPermissionDecision decision))decisionHandler {
@@ -2826,7 +2846,7 @@ index 3890426..2dea463 100644
    if (_mediaCapturePermissionGrantType == RNCWebViewPermissionGrantType_GrantIfSameHost_ElsePrompt || _mediaCapturePermissionGrantType == RNCWebViewPermissionGrantType_GrantIfSameHost_ElseDeny) {
      if ([origin.host isEqualToString:webView.URL.host]) {
        decisionHandler(WKPermissionDecisionGrant);
-@@ -1456,6 +1638,10 @@ - (void)                    webView:(WKWebView *)webView
+@@ -1456,6 +1641,10 @@ - (void)                    webView:(WKWebView *)webView
                      decisionHandler:(void (^)(WKNavigationResponsePolicy))decisionHandler
  {
    WKNavigationResponsePolicy policy = WKNavigationResponsePolicyAllow;
@@ -2837,7 +2857,7 @@ index 3890426..2dea463 100644
    if ([navigationResponse.response isKindOfClass:[NSHTTPURLResponse class]]) {
      NSHTTPURLResponse *response = (NSHTTPURLResponse *)navigationResponse.response;
      NSInteger statusCode = response.statusCode;
-@@ -1499,8 +1685,16 @@ - (void)               webView:(WKWebView *)webView
+@@ -1499,8 +1688,16 @@ - (void)               webView:(WKWebView *)webView
    didFailProvisionalNavigation:(WKNavigation *)navigation
                       withError:(NSError *)error
  {
@@ -2855,7 +2875,7 @@ index 3890426..2dea463 100644
        // NSURLErrorCancelled is reported when a page has a redirect OR if you load
        // a new URL in the WebView before the previous one came back. We can just
        // ignore these since they aren't real errors.
-@@ -1508,8 +1702,7 @@ - (void)               webView:(WKWebView *)webView
+@@ -1508,8 +1705,7 @@ - (void)               webView:(WKWebView *)webView
        return;
      }
  
@@ -2865,7 +2885,7 @@ index 3890426..2dea463 100644
        // Error code 102 "Frame load interrupted" is raised by the WKWebView
        // when the URL is from an http redirect. This is a common pattern when
        // implementing OAuth with a WebView.
-@@ -1842,6 +2035,108 @@ - (void)syncCookiesToWebView:(void (^)(void))completion {
+@@ -1842,6 +2038,122 @@ - (void)syncCookiesToWebView:(void (^)(void))completion {
    [self writeCookiesToWebView:cookies completion:completion];
  }
  
@@ -2898,6 +2918,20 @@ index 3890426..2dea463 100644
 +}
 +
 +#pragma mark - Qutai patch: content blocking
++
++- (void)setPageZoom:(CGFloat)pageZoom
++{
++  _pageZoom = pageZoom;
++  [self applyPageZoom];
++}
++
++- (void)applyPageZoom
++{
++  if (_webView == nil || _pageZoom <= 0) return;
++  if (@available(iOS 14.0, macOS 11.0, *)) {
++    if (fabs(_webView.pageZoom - _pageZoom) > 0.001) _webView.pageZoom = _pageZoom;
++  }
++}
 +
 +- (void)setContentBlocking:(BOOL)contentBlocking
 +{
@@ -3218,7 +3252,7 @@ index ae60768..dba1bc5 100644
  declare const _default: Spec;
  export default _default;
 diff --git a/node_modules/react-native-webview/lib/WebViewTypes.d.ts b/node_modules/react-native-webview/lib/WebViewTypes.d.ts
-index f666e81..87c7015 100644
+index f666e81..4e9dce7 100644
 --- a/node_modules/react-native-webview/lib/WebViewTypes.d.ts
 +++ b/node_modules/react-native-webview/lib/WebViewTypes.d.ts
 @@ -86,7 +86,23 @@ export interface WebViewRenderProcessGoneDetail {
@@ -3267,7 +3301,7 @@ index f666e81..87c7015 100644
  export type WebViewOpenWindowEvent = NativeSyntheticEvent<WebViewOpenWindow>;
  export type WebViewScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
  export type DataDetectorTypes = 'phoneNumber' | 'link' | 'address' | 'calendarEvent' | 'trackingNumber' | 'flightNumber' | 'lookupSuggestion' | 'none' | 'all';
-@@ -582,6 +613,14 @@ export interface IOSWebViewProps extends WebViewSharedProps {
+@@ -582,6 +613,19 @@ export interface IOSWebViewProps extends WebViewSharedProps {
       * Available on iOS 15 and later.
       */
      mediaCapturePermissionGrantType?: MediaCapturePermissionGrantType;
@@ -3279,10 +3313,15 @@ index f666e81..87c7015 100644
 +     * mediaCapturePermissionGrantType once set. Android: the requesting frame's origin must match.
 +     */
 +    mediaCaptureGrant?: string;
++    /**
++     * Qutai patch. iOS 14+: the WKWebView's page zoom (1 = 100%), like Safari's View › Zoom In: the whole page
++     * (layout, text and images) scales and the page lays out again to the narrower width. Kept across navigations.
++     */
++    pageZoom?: number;
      /**
       * A Boolean value which, when set to `true`, WebView will be rendered with Apple Pay support.
       *  Once set, websites will be able to invoke apple pay from React Native Webview.
-@@ -779,6 +818,21 @@ export interface MacOSWebViewProps extends WebViewSharedProps {
+@@ -779,6 +823,21 @@ export interface MacOSWebViewProps extends WebViewSharedProps {
  export interface AndroidWebViewProps extends WebViewSharedProps {
      onNavigationStateChange?: (event: WebViewNavigation) => void;
      onContentSizeChange?: (event: WebViewEvent) => void;
@@ -3304,7 +3343,7 @@ index f666e81..87c7015 100644
      /**
       * Function that is invoked when the `WebView` process crashes or is killed by the OS.
       * Works only on Android (minimum API level 26).
-@@ -974,6 +1028,72 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
+@@ -974,6 +1033,72 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
      onLoadSubResourceError?: (event: WebViewErrorEvent) => void;
  }
  export interface WebViewSharedProps extends ViewProps {
@@ -3416,7 +3455,7 @@ index 146bdf3..06575bd 100644
  
  export default TurboModuleRegistry.getEnforcing<Spec>('RNCWebViewModule');
 diff --git a/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts b/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
-index ca3af15..c6ea8f1 100644
+index ca3af15..72fa024 100644
 --- a/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
 +++ b/node_modules/react-native-webview/src/RNCWebViewNativeComponent.ts
 @@ -32,6 +32,19 @@ export type WebViewMessageEvent = Readonly<{
@@ -3488,17 +3527,19 @@ index ca3af15..c6ea8f1 100644
    cacheMode?: WithDefault<
      'LOAD_DEFAULT' | 'LOAD_CACHE_ELSE_NETWORK' | 'LOAD_NO_CACHE' | 'LOAD_CACHE_ONLY',
      'LOAD_DEFAULT'
-@@ -208,6 +256,8 @@ export interface NativeProps extends ViewProps {
+@@ -208,6 +256,10 @@ export interface NativeProps extends ViewProps {
      'prompt' | 'grant' | 'deny' | 'grantIfSameHostElsePrompt' | 'grantIfSameHostElseDeny',
      'prompt'
    >;
 +  // Qutai patch: see mediaCaptureGrant in WebViewTypes.ts.
 +  mediaCaptureGrant?: string;
++  // Qutai patch: see pageZoom in WebViewTypes.ts. iOS; Android ignores it.
++  pageZoom?: WithDefault<Double, 1>;
    pagingEnabled?: boolean;
    pullToRefreshEnabled?: boolean;
    refreshControlLightMode?: boolean;
 diff --git a/node_modules/react-native-webview/src/WebViewTypes.ts b/node_modules/react-native-webview/src/WebViewTypes.ts
-index 4e7247f..0209d10 100644
+index 4e7247f..312d1e4 100644
 --- a/node_modules/react-native-webview/src/WebViewTypes.ts
 +++ b/node_modules/react-native-webview/src/WebViewTypes.ts
 @@ -127,7 +127,23 @@ export interface WebViewRenderProcessGoneDetail {
@@ -3547,7 +3588,7 @@ index 4e7247f..0209d10 100644
  export type WebViewOpenWindowEvent = NativeSyntheticEvent<WebViewOpenWindow>;
  
  export type WebViewScrollEvent = NativeSyntheticEvent<NativeScrollEvent>;
-@@ -730,6 +761,14 @@ export interface IOSWebViewProps extends WebViewSharedProps {
+@@ -730,6 +761,20 @@ export interface IOSWebViewProps extends WebViewSharedProps {
     */
    mediaCapturePermissionGrantType?: MediaCapturePermissionGrantType;
  
@@ -3559,10 +3600,16 @@ index 4e7247f..0209d10 100644
 +   */
 +  mediaCaptureGrant?: string;
 +
++  /**
++   * Qutai patch. iOS 14+: the WKWebView's page zoom (1 = 100%), like Safari's View › Zoom In: the whole page
++   * (layout, text and images) scales and the page lays out again to the narrower width. Kept across navigations.
++   */
++  pageZoom?: number;
++
    /**
     * A Boolean value which, when set to `true`, WebView will be rendered with Apple Pay support.
     *  Once set, websites will be able to invoke apple pay from React Native Webview.
-@@ -950,6 +989,24 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
+@@ -950,6 +995,24 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
    onNavigationStateChange?: (event: WebViewNavigation) => void;
    onContentSizeChange?: (event: WebViewEvent) => void;
  
@@ -3587,7 +3634,7 @@ index 4e7247f..0209d10 100644
    /**
     * Function that is invoked when the `WebView` process crashes or is killed by the OS.
     * Works only on Android (minimum API level 26).
-@@ -1172,6 +1229,78 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
+@@ -1172,6 +1235,78 @@ export interface AndroidWebViewProps extends WebViewSharedProps {
  }
  
  export interface WebViewSharedProps extends ViewProps {

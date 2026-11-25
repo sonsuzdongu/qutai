@@ -255,6 +255,8 @@ import { stripDevice } from './src/device/macDevice';
 import { showTabStrip } from './src/ui/tabStrip';
 import { useKeyShortcuts } from './src/device/keyShortcuts';
 import { shortcutTab, type ShortcutEvent } from './src/ui/keyShortcuts';
+import { DEFAULT_ZOOM_LEVEL } from './src/browser/pageZoom';
+import { siteZoom } from './src/browser/siteZoom';
 import {
   VOICE_KEY_IDLE,
   VOICE_MIN_HOLD_MS,
@@ -731,7 +733,10 @@ function BrowserApp({
     const fileRequest = nativeDownloads?.consumeOpenFileRequest?.();
     // At a cold start the list is read first.
     if (fileRequest) downloads.load().then(() => openFile(fileRequest), () => {});
-    const offIncognito = browserInstance.onIncognitoEnd(() => downloads.forgetIncognito());
+    const offIncognito = browserInstance.onIncognitoEnd(() => {
+      downloads.forgetIncognito();
+      siteZoom.clearIncognito();
+    });
     return () => {
       offOpen?.remove();
       offOpenFile?.remove();
@@ -2217,6 +2222,18 @@ function BrowserApp({
       case 'forward':
         if (tab.canGoForward) tab.historyForward();
         return;
+      case 'zoomIn':
+      case 'zoomOut':
+      case 'actualSize': {
+        // The page zoom for the tab's site (UI-84), remembered per site like Safari; shown in a toast as Safari shows it.
+        const site = onNewTab || tab.reader ? null : siteKey(tab.url);
+        if (!site) return;
+        const level =
+          id === 'actualSize'
+            ? (siteZoom.set(site, tab.incognito, DEFAULT_ZOOM_LEVEL), DEFAULT_ZOOM_LEVEL)
+            : siteZoom.step(site, tab.incognito, id === 'zoomIn' ? 'in' : 'out');
+        return showToast(t('shortcuts.zoomLevel', { percent: level }));
+      }
       default: {
         const target = shortcutTab(
           id,

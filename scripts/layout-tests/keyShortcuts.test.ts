@@ -6,7 +6,7 @@ import { isShortcutEvent, isShortcutId, SHORTCUTS, shortcutTab, TEXT_EDITING } f
 const combo = (s: { input: string; modifiers: string[] }) => `${[...s.modifiers].sort().join('+')}+${s.input}`;
 
 test('the shortcuts are the agreed keys', () => {
-  const byId = Object.fromEntries(SHORTCUTS.map((s) => [s.id, combo(s)]));
+  const byId = Object.fromEntries(SHORTCUTS.filter((s) => !s.hidden).map((s) => [s.id, combo(s)]));
   assert.equal(byId.newTab, 'command+t');
   assert.equal(byId.closeTab, 'command+w');
   assert.equal(byId.reopenTab, 'command+shift+t');
@@ -20,6 +20,19 @@ test('the shortcuts are the agreed keys', () => {
   assert.equal(byId.newIncognitoTab, 'command+shift+n');
   assert.equal(byId.voice, 'alternate+ ');
   for (let n = 1; n <= 9; n++) assert.equal(byId[`tab${n}`], `command+${n}`);
+});
+
+test('page zoom: ⌘+ (also ⌘= and the shifted keys, not listed again), ⌘−, ⌘0', () => {
+  const zoomIn = SHORTCUTS.filter((s) => s.id === 'zoomIn');
+  assert.deepEqual(zoomIn.filter((s) => !s.hidden).map(combo), ['command++']);
+  assert.deepEqual(zoomIn.filter((s) => s.hidden).map(combo).sort(), ['command+=', 'command+shift++', 'command+shift+=']);
+  const visible = SHORTCUTS.filter((s) => !s.hidden);
+  assert.equal(combo(visible.find((s) => s.id === 'zoomOut')!), 'command+-');
+  assert.equal(combo(visible.find((s) => s.id === 'actualSize')!), 'command+0');
+  // The overlay lists each shortcut once.
+  const listed = visible.map((s) => s.id);
+  assert.equal(new Set(listed).size, listed.length);
+  assert.ok(isShortcutEvent('zoomIn') && isShortcutEvent('zoomOut') && isShortcutEvent('actualSize'));
 });
 
 test('no two shortcuts share a key, and none takes a text editing key', () => {

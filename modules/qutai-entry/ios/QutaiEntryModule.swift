@@ -72,7 +72,8 @@ public class QutaiEntryModule: Module {
 
     /// Keyboard shortcuts on a Mac and an iPad with a hardware keyboard (UI-76; the list and its titles come from
     /// src/ui/keyShortcuts.ts). Each item: id, input ("tab" for the Tab key), modifiers (command, shift, control,
-    /// alternate) and the title iPad shows while ⌘ is held. An empty list removes them.
+    /// alternate), the title iPad shows while ⌘ is held and `hidden` (a second key for the same shortcut, not listed
+    /// again). An empty list removes them.
     Function("setKeyShortcuts") { (items: [[String: Any]]) in
       // UIKit state: on the main thread (a sync function runs on the JavaScript thread).
       DispatchQueue.main.async { KeyShortcuts.shared.set(items) }
@@ -207,6 +208,8 @@ final class KeyShortcuts {
         modifierFlags: flags,
         propertyList: id
       )
+      // A second key for the same shortcut (⌘= for ⌘+): works, but isn't listed again in iPad's ⌘-hold overlay.
+      if item["hidden"] as? Bool == true { command.attributes = .hidden }
       if #available(iOS 15.0, *) {
         // Ours wins over the system's own use of a key (⌃Tab, ⌘[), as in desktop browsers.
         command.wantsPriorityOverSystemBehavior = true

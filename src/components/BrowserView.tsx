@@ -56,9 +56,14 @@ import { CrashPage, ErrorPage } from './ErrorPage';
 import type { LibraryTab } from './LibraryScreen';
 import { NewTabPage } from './NewTabPage';
 import { tabInspectable } from '../browser/devTools';
-import { isIosAppOnMac } from '../device/macDevice';
+import { isIosAppOnMac, stripDevice } from '../device/macDevice';
+import { baseZoomFor, webViewPageZoom } from '../browser/pageZoom';
+import { useSiteZoomLevel } from '../browser/siteZoom';
 import { ReaderPrefs, ReaderView } from './ReaderView';
 
+
+/** iOS: the page zoom that shows pages at their normal size (a Mac: Safari's size, UI-84). */
+const IOS_BASE_PAGE_ZOOM = baseZoomFor(stripDevice);
 /**
  * Renders every tab's WebView stacked on top of each other. Hidden tabs stay
  * mounted and laid out (only made invisible) so they keep their state and the
@@ -347,6 +352,11 @@ function TabWebView({
     }
     tab.webview?.injectJavaScript(`if (window.top === window) (function () {\n${stylesScript}\n})(); true;`);
   }, [tab, stylesScript]);
+
+  // iOS page zoom (UI-84): the device's base zoom (a Mac draws pages at Safari's size) times the site's ⌘+/⌘− level.
+  // The Settings text size (textZoomScript) works on top of it.
+  const zoomLevel = useSiteZoomLevel(siteKey(tab.url), tab.incognito);
+  const pageZoom = Platform.OS === 'ios' ? webViewPageZoom(zoomLevel, IOS_BASE_PAGE_ZOOM) : undefined;
 
   // iOS: apply a new text size to the page already on screen too.
   useEffect(() => {
@@ -700,6 +710,8 @@ function TabWebView({
             // own document is checked natively against the filter lists' domains; iOS: the compiled WebKit rule lists
             // are attached. Not on sites where the user turned it off. Incognito tabs block the same way.
             contentBlocking={blockAds}
+            // Page zoom (UI-84, patched react-native-webview: WKWebView.pageZoom). iOS only.
+            pageZoom={pageZoom}
             contentBlockingOffSites={offSitesProp}
             contentRuleLists={ruleListsProp}
             onContentBlocked={(e) => tab.handleContentBlocked(e.nativeEvent.blocked)}

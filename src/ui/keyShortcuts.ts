@@ -22,6 +22,10 @@ export type ShortcutId =
   | 'forward'
   | 'nextTab'
   | 'prevTab'
+  /** ⌘+ (also ⌘=), ⌘−, ⌘0: the page zoom for the site (UI-84, browser/pageZoom.ts). */
+  | 'zoomIn'
+  | 'zoomOut'
+  | 'actualSize'
   /** ⌥Space, the Qutai button's push-to-talk (UI-81): reported as voiceDown / voiceUp, never as itself. */
   | 'voice'
   | `tab${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}`;
@@ -35,6 +39,8 @@ export type Shortcut = {
   input: string;
   modifiers: ShortcutModifier[];
   title: ShortcutTitle;
+  /** Another key for the same shortcut (⌘= for ⌘+): works, but not listed twice in iPad's ⌘-hold overlay. */
+  hidden?: boolean;
 };
 
 const DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
@@ -52,6 +58,13 @@ export const SHORTCUTS: Shortcut[] = [
   { id: 'forward', input: ']', modifiers: ['command'], title: { key: 'menu.forward' } },
   { id: 'nextTab', input: 'tab', modifiers: ['control'], title: { key: 'shortcuts.nextTab' } },
   { id: 'prevTab', input: 'tab', modifiers: ['control', 'shift'], title: { key: 'shortcuts.prevTab' } },
+  { id: 'zoomIn', input: '+', modifiers: ['command'], title: { key: 'shortcuts.zoomIn' } },
+  // ⌘= is ⌘+ without Shift on most keyboards; ⇧⌘+ / ⇧⌘= where + or = needs Shift (a Turkish Q keyboard: ⇧4, ⇧0).
+  { id: 'zoomIn', input: '=', modifiers: ['command'], title: { key: 'shortcuts.zoomIn' }, hidden: true },
+  { id: 'zoomIn', input: '+', modifiers: ['command', 'shift'], title: { key: 'shortcuts.zoomIn' }, hidden: true },
+  { id: 'zoomIn', input: '=', modifiers: ['command', 'shift'], title: { key: 'shortcuts.zoomIn' }, hidden: true },
+  { id: 'zoomOut', input: '-', modifiers: ['command'], title: { key: 'shortcuts.zoomOut' } },
+  { id: 'actualSize', input: '0', modifiers: ['command'], title: { key: 'shortcuts.actualSize' } },
   { id: 'voice', input: ' ', modifiers: ['alternate'], title: { key: 'shortcuts.voice' } },
   ...DIGITS.map((n): Shortcut => ({
     id: `tab${n}`,

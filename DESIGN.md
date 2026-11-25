@@ -14,11 +14,12 @@ for the map, then only the area files you need; never load all of them at once.
 
 ## Changelog
 
-Last updated: 2026-11-25
+Last updated: 2026-11-26
 
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-26:** On a Mac, web pages now show at Safari's size (page zoom 1.299 against macOS's 77% iPad scale), and ⌘+ / ⌘− / ⌘0 zoom pages on a Mac or iPad keyboard, remembered per site like Safari (`UI-84`, `UI-76`; owner).
 - **2026-11-25:** "Allow developer tools" in Settings › Security lets Safari's Web Inspector (Chrome's on Android) see Qutai's tabs, with steps to open it; on by default on a Mac only, never incognito tabs on iOS (`WPERM-20`). A Mac's Safari version in the User-Agent follows Safari's own numbering before macOS 26 (`DATA-33`; owner).
 - **2026-11-25:** iPad and Mac tabs no longer say "Mobile" in the User-Agent (it now matches Safari exactly), so sites such as eksisozluk.com serve their full desktop page (`DATA-33`; owner's report).
 - **2026-11-26:** A new tab opens with the cursor in the address bar (`UI-83`).
