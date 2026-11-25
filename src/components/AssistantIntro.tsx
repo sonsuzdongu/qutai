@@ -48,6 +48,13 @@ export function registerAssistantButton(measure: Measure): () => void {
   };
 }
 
+/** Where the Qutai button is on screen (the keyboard's push-to-talk, UI-81, shows its bubble there); false when it isn't. */
+export function measureAssistantButton(then: (frame: Frame) => void): boolean {
+  if (!measureButton) return false;
+  measureButton(then);
+  return true;
+}
+
 export async function assistantIntroSeen(): Promise<boolean> {
   try {
     return !!(await getJson<boolean>(await getDb(), KEY));

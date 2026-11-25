@@ -8,7 +8,7 @@
 
 import type { MessageKey } from '../i18n';
 
-export type ShortcutModifier = 'command' | 'shift' | 'control';
+export type ShortcutModifier = 'command' | 'shift' | 'control' | 'alternate';
 
 export type ShortcutId =
   | 'newTab'
@@ -22,6 +22,8 @@ export type ShortcutId =
   | 'forward'
   | 'nextTab'
   | 'prevTab'
+  /** ⌥Space, the Qutai button's push-to-talk (UI-81): reported as voiceDown / voiceUp, never as itself. */
+  | 'voice'
   | `tab${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}`;
 
 /** The title shown in iPad's ⌘-hold overlay: an i18n key with its values. */
@@ -50,6 +52,7 @@ export const SHORTCUTS: Shortcut[] = [
   { id: 'forward', input: ']', modifiers: ['command'], title: { key: 'menu.forward' } },
   { id: 'nextTab', input: 'tab', modifiers: ['control'], title: { key: 'shortcuts.nextTab' } },
   { id: 'prevTab', input: 'tab', modifiers: ['control', 'shift'], title: { key: 'shortcuts.prevTab' } },
+  { id: 'voice', input: ' ', modifiers: ['alternate'], title: { key: 'shortcuts.voice' } },
   ...DIGITS.map((n): Shortcut => ({
     id: `tab${n}`,
     input: String(n),
@@ -67,6 +70,13 @@ export const TEXT_EDITING: { input: string; modifiers: ShortcutModifier[] }[] = 
   { input: 'z', modifiers: ['command'] },
   { input: 'z', modifiers: ['command', 'shift'] },
 ];
+
+/** What the native side reports: a shortcut, or the voice key going down or up. */
+export type ShortcutEvent = Exclude<ShortcutId, 'voice'> | 'voiceDown' | 'voiceUp';
+
+export function isShortcutEvent(value: unknown): value is ShortcutEvent {
+  return value === 'voiceDown' || value === 'voiceUp' || (value !== 'voice' && isShortcutId(value));
+}
 
 export function isShortcutId(value: unknown): value is ShortcutId {
   return typeof value === 'string' && SHORTCUTS.some((s) => s.id === value);

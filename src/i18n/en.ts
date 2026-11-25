@@ -1631,7 +1631,7 @@ export const en = {
   'shortcuts.lastTab': 'Last tab',
   'shortcuts.nextTab': 'Next tab',
   'shortcuts.prevTab': 'Previous tab',
-  'shortcuts.voice': 'Talk to Qutai (hold, or tap twice)',
+  'shortcuts.voice': 'Talk to Qutai (hold, or tap to start and again to send)',
   'tabs.closed': 'Tab closed',
   'tabs.undo': 'Undo',
   'tabs.recentlyClosed': 'Recently closed',

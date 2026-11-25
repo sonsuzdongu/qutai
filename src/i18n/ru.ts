@@ -1639,7 +1639,7 @@ export const ru: Record<keyof typeof en, string> = {
   'shortcuts.lastTab': 'Последняя вкладка',
   'shortcuts.nextTab': 'Следующая вкладка',
   'shortcuts.prevTab': 'Предыдущая вкладка',
-  'shortcuts.voice': 'Говорить с Qutai (удерживайте или нажмите дважды)',
+  'shortcuts.voice': 'Говорить с Qutai (удерживайте или нажмите, чтобы начать, и ещё раз, чтобы отправить)',
   'tabs.closed': 'Вкладка закрыта',
   'tabs.undo': 'Отменить',
   'tabs.recentlyClosed': 'Недавно закрытые',

@@ -2,7 +2,7 @@ import { requireOptionalNativeModule } from 'expo';
 import { useEffect, useRef } from 'react';
 import { Platform } from 'react-native';
 import { t, useLanguage } from '../i18n';
-import { isShortcutId, SHORTCUTS, type ShortcutId } from '../ui/keyShortcuts';
+import { isShortcutEvent, SHORTCUTS, type ShortcutEvent } from '../ui/keyShortcuts';
 import { offersTabStrip } from '../ui/tabStrip';
 import { stripDevice } from './macDevice';
 
@@ -22,7 +22,7 @@ const native =
     : null;
 
 /** Re-registers the titles when the app's language changes. */
-export function useKeyShortcuts(onShortcut: (id: ShortcutId) => void) {
+export function useKeyShortcuts(onShortcut: (id: ShortcutEvent) => void) {
   const language = useLanguage();
   const handler = useRef(onShortcut);
   // The latest handler (it sees the current tab), without re-subscribing on every render.
@@ -47,7 +47,7 @@ export function useKeyShortcuts(onShortcut: (id: ShortcutId) => void) {
   useEffect(() => {
     if (typeof native?.addListener !== 'function') return;
     const sub = native.addListener('onShortcut', (event) => {
-      if (isShortcutId(event?.id)) handler.current(event.id);
+      if (isShortcutEvent(event?.id)) handler.current(event.id);
     });
     return () => sub.remove();
   }, []);

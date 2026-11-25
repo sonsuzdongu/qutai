@@ -183,6 +183,10 @@ final class KeyShortcuts {
 
   func set(_ items: [[String: Any]]) {
     install()
+    // ⌥Space (id "voice", UI-81) is the keyboard's Qutai button: its press and release are watched in sendEvent below;
+    // its key command only lists it in iPad's ⌘-hold overlay and keeps the key from typing into a field.
+    voiceEnabled = items.contains { $0["id"] as? String == "voice" }
+    if voiceEnabled { installPressWatch() } else { voiceDown = false }
     commands = items.compactMap { item in
       guard let id = item["id"] as? String, let input = item["input"] as? String, !input.isEmpty else { return nil }
       var flags: UIKeyModifierFlags = []
@@ -212,7 +216,51 @@ final class KeyShortcuts {
   }
 
   fileprivate func fire(_ id: String) {
+    // The voice key's own command: its press and release come from watch(_:).
+    if id == "voice" { return }
     listener?(id)
+  }
+
+  private var voiceEnabled = false
+  private var voiceDown = false
+  private var pressWatchInstalled = false
+
+  /// Sees every key press on its way in (without taking it): ⌥Space down reports "voiceDown", the Space key coming up
+  /// afterwards (whether or not ⌥ is still held) "voiceUp".
+  private func installPressWatch() {
+    guard !pressWatchInstalled else { return }
+    pressWatchInstalled = true
+    let selector = #selector(UIApplication.sendEvent(_:))
+    guard let method = class_getInstanceMethod(UIApplication.self, selector) else { return }
+    typealias Send = @convention(c) (UIApplication, Selector, UIEvent) -> Void
+    let original = unsafeBitCast(method_getImplementation(method), to: Send.self)
+    let block: @convention(block) (UIApplication, UIEvent) -> Void = { app, event in
+      if let presses = event as? UIPressesEvent { KeyShortcuts.shared.watch(presses) }
+      original(app, selector, event)
+    }
+    method_setImplementation(method, imp_implementationWithBlock(block))
+  }
+
+  private func watch(_ event: UIPressesEvent) {
+    guard voiceEnabled else { return }
+    for press in event.allPresses {
+      guard let key = press.key, key.keyCode == .keyboardSpacebar else { continue }
+      switch press.phase {
+      case .began:
+        let others = key.modifierFlags.subtracting([.alternate, .alphaShift, .numericPad])
+        if !voiceDown, key.modifierFlags.contains(.alternate), others.isEmpty {
+          voiceDown = true
+          listener?("voiceDown")
+        }
+      case .ended, .cancelled:
+        if voiceDown {
+          voiceDown = false
+          listener?("voiceUp")
+        }
+      default:
+        break
+      }
+    }
   }
 
   private func install() {

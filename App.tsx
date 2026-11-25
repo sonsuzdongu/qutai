@@ -109,7 +109,12 @@ import { IconItem, MenuItem, PageMenu } from './src/components/PageMenu';
 import type { SettingsPage } from './src/components/SettingsModal';
 import { ServerRestoreOffer } from './src/components/ServerRestoreOffer';
 import { useServerBackupLifecycle } from './src/backup/server/useServerBackupLifecycle';
-import { AssistantIntro, assistantIntroSeen, setAssistantIntroSeen } from './src/components/AssistantIntro';
+import {
+  AssistantIntro,
+  assistantIntroSeen,
+  measureAssistantButton,
+  setAssistantIntroSeen,
+} from './src/components/AssistantIntro';
 import { CalendarChoiceHost } from './src/components/CalendarChoiceScreen';
 import { SelectionAction, SelectionBar } from './src/components/SelectionBar';
 import { TextSizeSheet } from './src/components/TextSizeSheet';
@@ -249,7 +254,8 @@ import { TabStrip } from './src/components/TabStrip';
 import { stripDevice } from './src/device/macDevice';
 import { showTabStrip } from './src/ui/tabStrip';
 import { useKeyShortcuts } from './src/device/keyShortcuts';
-import { shortcutTab, type ShortcutId } from './src/ui/keyShortcuts';
+import { shortcutTab, type ShortcutEvent } from './src/ui/keyShortcuts';
+import { VOICE_KEY_IDLE, voiceKeyStep, type VoiceKeyState } from './src/ui/voiceKey';
 import { clearSiteIcons } from './src/storage/siteIcons';
 import { setIncognitoProbe } from './src/analytics';
 import { askAnalyticsConsentOnce } from './src/analytics/consentPrompt';
@@ -2112,7 +2118,30 @@ function BrowserApp({
     // Not behind the incognito lock: the keyboard would come up over the lock screen.
     if (!incognito || !settings.incognitoLock || incognitoUnlocked) setAddressEdit({ id: Date.now(), text: '' });
   };
-  useKeyShortcuts((id: ShortcutId) => {
+  // ⌥Space, the keyboard's Qutai button (UI-81): only where holding the button would listen (the button shown,
+  // "Hold to talk" on, the panel closed, no lock or full screen); voice consent, the microphone permission, incognito
+  // and a running task are handled by the push-to-talk itself, as for the button.
+  const voiceKey = useRef<VoiceKeyState>(VOICE_KEY_IDLE);
+  // The session ended on its own (sent, nothing heard, cancelled): the next press starts a new one.
+  if (ptt.bubble.phase === 'idle' && voiceKey.current.kind === 'toggled') voiceKey.current = VOICE_KEY_IDLE;
+  const onVoiceKey = (event: 'down' | 'up') => {
+    const canStart =
+      !lock && !screen && !panelOpen && settings.showAssistantButton && settings.voiceHoldToTalk;
+    if (event === 'down' && voiceKey.current.kind === 'idle' && !canStart) return;
+    const step = voiceKeyStep(voiceKey.current, event, Date.now());
+    if (step.action === 'start') {
+      const measured = measureAssistantButton((anchor) => {
+        ptt.handlers.pressIn();
+        ptt.handlers.start(anchor);
+      });
+      if (!measured) return;
+    } else if (step.action === 'release') {
+      ptt.handlers.release();
+    }
+    voiceKey.current = step.state;
+  };
+  useKeyShortcuts((id: ShortcutEvent) => {
+    if (id === 'voiceDown' || id === 'voiceUp') return onVoiceKey(id === 'voiceDown' ? 'down' : 'up');
     if (lock || screen) return;
     switch (id) {
       case 'newTab':

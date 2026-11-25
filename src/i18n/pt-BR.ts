@@ -1640,7 +1640,7 @@ export const ptBR: Record<keyof typeof en, string> = {
   'shortcuts.lastTab': 'Última guia',
   'shortcuts.nextTab': 'Próxima guia',
   'shortcuts.prevTab': 'Guia anterior',
-  'shortcuts.voice': 'Falar com o Qutai (segure ou toque duas vezes)',
+  'shortcuts.voice': 'Falar com o Qutai (segure, ou toque para começar e de novo para enviar)',
   'tabs.closed': 'Guia fechada',
   'tabs.undo': 'Desfazer',
   'tabs.recentlyClosed': 'Fechadas recentemente',

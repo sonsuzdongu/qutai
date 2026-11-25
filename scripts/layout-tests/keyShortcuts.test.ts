@@ -1,7 +1,7 @@
 // Keyboard shortcuts on a Mac and an iPad (UI-76): src/ui/keyShortcuts.ts.
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { isShortcutId, SHORTCUTS, shortcutTab, TEXT_EDITING } from '../../src/ui/keyShortcuts';
+import { isShortcutEvent, isShortcutId, SHORTCUTS, shortcutTab, TEXT_EDITING } from '../../src/ui/keyShortcuts';
 
 const combo = (s: { input: string; modifiers: string[] }) => `${[...s.modifiers].sort().join('+')}+${s.input}`;
 
@@ -18,6 +18,7 @@ test('the shortcuts are the agreed keys', () => {
   assert.equal(byId.nextTab, 'control+tab');
   assert.equal(byId.prevTab, 'control+shift+tab');
   assert.equal(byId.newIncognitoTab, 'command+shift+n');
+  assert.equal(byId.voice, 'alternate+ ');
   for (let n = 1; n <= 9; n++) assert.equal(byId[`tab${n}`], `command+${n}`);
 });
 
@@ -39,6 +40,14 @@ test('only known ids are accepted from the native side', () => {
   assert.ok(!isShortcutId('tab0'));
   assert.ok(!isShortcutId('copy'));
   assert.ok(!isShortcutId(undefined));
+});
+
+test('the voice key arrives as its press and release, never as itself', () => {
+  assert.ok(isShortcutEvent('voiceDown'));
+  assert.ok(isShortcutEvent('voiceUp'));
+  assert.ok(isShortcutEvent('reload'));
+  assert.ok(!isShortcutEvent('voice'));
+  assert.ok(!isShortcutEvent('paste'));
 });
 
 const ids = ['a', 'b', 'c', 'd'];

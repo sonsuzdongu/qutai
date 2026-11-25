@@ -1640,7 +1640,7 @@ export const ja: Record<keyof typeof en, string> = {
   'shortcuts.lastTab': '最後のタブ',
   'shortcuts.nextTab': '次のタブ',
   'shortcuts.prevTab': '前のタブ',
-  'shortcuts.voice': 'Qutai に話しかける（長押し、または 2 回タップ）',
+  'shortcuts.voice': 'Qutai に話しかける（長押し、またはタップで開始・もう一度タップで送信）',
   'tabs.closed': 'タブを閉じました',
   'tabs.undo': '元に戻す',
   'tabs.recentlyClosed': '最近閉じたタブ',

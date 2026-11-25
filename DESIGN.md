@@ -19,6 +19,7 @@ Last updated: 2026-11-25
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-25:** Mac and iPad: ⌥Space talks to Qutai like holding its button (hold and release, or tap to start and tap to send) (`UI-81`; owner's request).
 - **2026-11-25:** Address suggestions appear only once something is typed; the empty box and its Paste and go row are gone (`UI-80`).
 - **2026-11-25:** On a Mac the app starts right under the title bar: the phantom status-bar and home-indicator insets are dropped there (`UI-79`; owner's report).
 - **2026-11-25:** "Clear history" moves above the History list, where long lists can reach it (`UI-78`).
