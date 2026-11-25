@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode, useEffect, useState, useSyncExternalStore } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { Aurora } from '../ui/Aurora';
 import { GradientText } from '../ui/BrandGradient';
@@ -178,10 +178,10 @@ export function NewTabPage({ incognito, darkMode, active, onNavigate, onAskForAp
                 <Section
                   title={t('newTab.recent')}
                   onSeeAll={() => onOpenLibrary('history')}
-                  open={recentOpen}
+                  open={recentOpen === true}
                   onToggle={() => setRecentOpen(!recentOpen)}
                 >
-                  {recentOpen &&
+                  {recentOpen === true &&
                     data.recent.map((h) => (
                       <LinkRow key={h.id} title={h.title} url={h.url} onPress={() => onNavigate(h.url)} />
                     ))}
@@ -198,15 +198,30 @@ export function NewTabPage({ incognito, darkMode, active, onNavigate, onAskForAp
 /** Stored on the phone: whether "Recently visited" is open (UI-70); open until the user closes it. */
 const RECENT_OPEN_KEY = 'newtab_recent_open';
 
-function useRecentOpen(): [boolean, (open: boolean) => void] {
-  const [open, setOpen] = useState(true);
-  useEffect(() => {
-    SecureStore.getItemAsync(RECENT_OPEN_KEY)
-      .then((v) => v === '0' && setOpen(false))
-      .catch(() => {});
-  }, []);
+// One value for every new tab page (several tabs can show one), read once per launch. Until it is read the list is
+// not drawn, so a closed section never flashes open at start.
+let recentOpen: boolean | null = null;
+const recentListeners = new Set<() => void>();
+const setRecentOpenValue = (open: boolean) => {
+  recentOpen = open;
+  recentListeners.forEach((l) => l());
+};
+SecureStore.getItemAsync(RECENT_OPEN_KEY)
+  .then((v) => recentOpen === null && setRecentOpenValue(v !== '0'))
+  .catch(() => recentOpen === null && setRecentOpenValue(true));
+
+function useRecentOpen(): [boolean | null, (open: boolean) => void] {
+  const open = useSyncExternalStore(
+    (l) => {
+      recentListeners.add(l);
+      return () => {
+        recentListeners.delete(l);
+      };
+    },
+    () => recentOpen,
+  );
   const set = (next: boolean) => {
-    setOpen(next);
+    setRecentOpenValue(next);
     SecureStore.setItemAsync(RECENT_OPEN_KEY, next ? '1' : '0').catch(() => {});
   };
   return [open, set];
