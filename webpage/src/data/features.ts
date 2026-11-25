@@ -5,7 +5,7 @@ import type { IconName } from '../components/Icon';
  * backend/DESIGN.md) as of the date below. Only what the code does; limits said plainly. When a feature lands or
  * changes, update its item here in both languages, together with the home page.
  */
-export const FEATURES_CHECKED = '2026-11-23';
+export const FEATURES_CHECKED = '2026-11-25';
 
 export type Text = { en: string; tr: string };
 const t = (en: string, tr: string): Text => ({ en, tr });
@@ -30,8 +30,8 @@ export const PAGE = {
   kicker: t('Features', 'Özellikler'),
   title: t('Everything Qutai does, in one place.', 'Qutai’ın yaptığı her şey, tek sayfada.'),
   lede: t(
-    'A browser for iPhone and Android with an AI assistant built in. Ask in your own words, by typing or by voice; the examples under each feature are requests you could send as they are. This page follows Qutai’s design record: what the code does today, and where its limits are.',
-    'iPhone ve Android için, yapay zekâ asistanıyla gelen bir tarayıcı. Ne istediğinizi kendi sözlerinizle yazın ya da söyleyin; her özelliğin altındaki örnekleri olduğu gibi gönderebilirsiniz. Bu sayfa Qutai’ın tasarım kaydına dayanır: kodun bugün yaptıklarını ve sınırlarını anlatır.',
+    'A browser for iPhone, iPad, Mac with Apple silicon and Android, with an AI assistant built in. Ask in your own words, by typing or by voice; the examples under each feature are requests you could send as they are. This page follows Qutai’s design record: what the code does today, and where its limits are.',
+    'iPhone, iPad, Apple silicon işlemcili Mac ve Android için, yapay zekâ asistanıyla gelen bir tarayıcı. Ne istediğinizi kendi sözlerinizle yazın ya da söyleyin; her özelliğin altındaki örnekleri olduğu gibi gönderebilirsiniz. Bu sayfa Qutai’ın tasarım kaydına dayanır: kodun bugün yaptıklarını ve sınırlarını anlatır.',
   ),
   medallionLabel: t(
     'An illuminated medallion with Qutai’s mark at its centre and ten petals, one for each group of features; each petal links to its group.',
@@ -498,8 +498,8 @@ export const GROUPS: Group[] = [
       {
         title: t('Talk instead of typing', 'Yazmak yerine konuşun'),
         body: t(
-          'Hold the microphone, or hold the Q button without opening the panel. Speech becomes text on the phone when it can; otherwise Apple’s or Google’s service hears it, after one question. No audio goes to Qutai or the AI.',
-          'Mikrofona basılı tutun ya da paneli hiç açmadan Q düğmesine. Konuşmanız mümkünse telefonda yazıya çevrilir; değilse, bir kez sorduktan sonra Apple’ın ya da Google’ın hizmeti kullanılır. Ses kaydı ne Qutai’a ne de yapay zekâya gider.',
+          'Hold the microphone, or hold the Q button without opening the panel. Speech becomes text on the phone when it can; otherwise Apple’s or Google’s service hears it, after one question. On a Mac speech is always turned into text by Apple’s online service, so voice input there needs no question and is off in incognito. No audio goes to Qutai or the AI.',
+          'Mikrofona basılı tutun ya da paneli hiç açmadan Q düğmesine. Konuşmanız mümkünse telefonda yazıya çevrilir; değilse, bir kez sorduktan sonra Apple’ın ya da Google’ın hizmeti kullanılır. Mac’te konuşma her zaman Apple’ın çevrim içi hizmetiyle yazıya çevrilir; bu yüzden orada soru sorulmaz ve gizli modda sesle yazma kapalıdır. Ses kaydı ne Qutai’a ne de yapay zekâya gider.',
         ),
       },
       {
@@ -607,8 +607,8 @@ export const GROUPS: Group[] = [
     icon: 'tabs',
     title: t('And a complete browser', 'Ve eksiksiz bir tarayıcı'),
     lede: t(
-      'Everything you expect from a browser, in ten languages, on phones and tablets.',
-      'Bir tarayıcıdan beklediğiniz her şey; on dilde, telefonda da tablette de.',
+      'Everything you expect from a browser, in ten languages, on phones, tablets and Macs.',
+      'Bir tarayıcıdan beklediğiniz her şey; on dilde, telefonda, tablette ve Mac’te.',
     ),
     items: [
       {
@@ -663,6 +663,59 @@ export const GROUPS: Group[] = [
       },
     ],
   },
+  {
+    id: 'desktop',
+    icon: 'desktop',
+    title: t('On iPad and Mac', 'iPad’de ve Mac’te'),
+    lede: t(
+      'The same app runs on iPad and, from the App Store, on Macs with Apple silicon (not Intel Macs). There it works like a desktop browser.',
+      'Aynı uygulama iPad’de ve App Store’dan Apple silicon işlemcili Mac’lerde de çalışır (Intel işlemcili Mac’lerde çalışmaz). Orada bir masaüstü tarayıcısı gibi davranır.',
+    ),
+    items: [
+      {
+        title: t('Tabs in a strip, the address at the top', 'Şerit hâlinde sekmeler, adres üstte'),
+        body: t(
+          'The address bar starts at the top, with your tabs in a strip above it, each with its site’s icon, title and ×, and + for a new tab; tab groups show their coloured label. Move the bar to the bottom in Settings › Appearance and the strip goes with it, or turn the strip off. It hides when the window is narrower than 700 points, as in Split View. Reload sits in the address bar. Phones keep the bar at the bottom and have no strip.',
+          'Adres çubuğu üstte başlar; sekmeleriniz onun üstünde bir şerittedir: her birinde sitenin simgesi, başlığı ve ×, sonda da yeni sekme için +; sekme grupları renkli etiketleriyle görünür. Ayarlar › Görünüm’den çubuğu alta alırsanız şerit de onunla gider; isterseniz şeridi kapatın. Pencere 700 noktadan darsa, örneğin Split View’da, şerit gizlenir. Yenile düğmesi adres çubuğundadır. Telefonlarda çubuk altta kalır, şerit yoktur.',
+        ),
+      },
+      {
+        title: t('Browser keyboard shortcuts', 'Tarayıcı klavye kısayolları'),
+        body: t(
+          'On a Mac, and on an iPad with a keyboard: ⌘T new tab, ⌘⇧N incognito tab, ⌘W close, ⌘⇧T reopen the last closed tab, ⌘R reload, ⌘L the address bar, ⌘F find in page, ⌘[ and ⌘] back and forward, ⌘1 to ⌘9 a tab by its place, ⌃Tab the next tab. Copy, paste and undo stay with the page and your text. On iPad, hold ⌘ to see the list.',
+          'Mac’te ve klavyeli iPad’de: ⌘T yeni sekme, ⌘⇧N gizli sekme, ⌘W kapat, ⌘⇧T son kapatılan sekmeyi geri aç, ⌘R yenile, ⌘L adres çubuğu, ⌘F sayfada bul, ⌘[ ve ⌘] geri ve ileri, ⌘1–⌘9 sırasıyla sekmeler, ⌃Tab sonraki sekme. Kopyala, yapıştır ve geri al sayfada ve yazınızda kalır. iPad’de listeyi görmek için ⌘’ye basılı tutun.',
+        ),
+      },
+      {
+        title: t('Hold ⌥Space to talk', 'Konuşmak için ⌥Boşluk’a basılı tutun'),
+        body: t(
+          'Hold ⌥Space to talk to Qutai, the same as holding the Q button; let go and it is sent. A quick press does nothing, so the microphone never stays on.',
+          'Qutai ile konuşmak için ⌥Boşluk’a basılı tutun; Q düğmesini basılı tutmakla aynıdır. Bıraktığınızda gönderilir. Kısa bir basış hiçbir şey yapmaz; mikrofon açık kalmaz.',
+        ),
+      },
+      {
+        title: t('Desktop sites, and words for your device', 'Masaüstü siteler, cihazınıza göre sözler'),
+        body: t(
+          'Qutai tells sites it is Safari on an iPad or a Mac, so they serve their desktop layouts. The app and the assistant say “this Mac” or “this iPad” where a phone says “this phone”.',
+          'Qutai sitelere kendini iPad’de ya da Mac’te Safari olarak tanıtır; siteler de masaüstü görünümlerini gönderir. Telefonda “bu telefon” denen yerde uygulama da asistan da “bu Mac” ya da “bu iPad” der.',
+        ),
+      },
+      {
+        title: t('Downloads that open on a Mac', 'Mac’te açılan indirmeler'),
+        body: t(
+          'On a Mac, Open hands a finished download to the Mac’s app for its type, and Save… puts a copy in Downloads or any folder you pick. On iPad, Open previews it.',
+          'Mac’te Aç, biten indirmeyi o türün Mac’teki uygulamasına verir; Kaydet… bir kopyasını İndirilenler’e ya da seçtiğiniz klasöre koyar. iPad’de Aç dosyayı önizler.',
+        ),
+      },
+      {
+        title: t('Developer tools', 'Geliştirici araçları'),
+        body: t(
+          'Safari’s Web Inspector can open the pages in Qutai, never incognito tabs. Settings › Security › Allow developer tools turns it on or off (on by default on a Mac only) and shows the steps.',
+          'Safari’nin Web Inspector’ı Qutai’daki sayfaları açabilir; gizli sekmeleri asla. Ayarlar › Güvenlik › Geliştirici araçlarına izin ver bunu açar ya da kapatır (yalnızca Mac’te baştan açık) ve adımları gösterir.',
+        ),
+      },
+    ],
+  },
 ];
 
 export const LEAVES: { to: Text; what: Text; when: Text }[] = [
@@ -690,10 +743,10 @@ export const LEAVES: { to: Text; what: Text; when: Text }[] = [
   {
     to: t('Apple or Google', 'Apple ya da Google'),
     what: t(
-      'The address lookup for “Use my location”; speech, when the phone can’t recognise it itself',
-      '“Konumumu kullan” dediğinizde adres sorgusu; telefon sesinizi kendisi yazıya çeviremediğinde konuşmanız',
+      'The address lookup for “Use my location”; speech, when the phone can’t recognise it itself (on a Mac, always Apple’s service)',
+      '“Konumumu kullan” dediğinizde adres sorgusu; telefon sesinizi kendisi yazıya çeviremediğinde konuşmanız (Mac’te her zaman Apple’ın hizmeti)',
     ),
-    when: t('After a one-time question; never in incognito', 'Bir kez sorulduktan sonra; gizli modda asla'),
+    when: t('After a one-time question (on a Mac, on by default); never in incognito', 'Bir kez sorulduktan sonra (Mac’te baştan açık); gizli modda asla'),
   },
   {
     to: t('Sites shown on option cards', 'Seçenek kartlarındaki siteler'),

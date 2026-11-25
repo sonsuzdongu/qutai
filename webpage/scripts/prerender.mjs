@@ -34,7 +34,7 @@ function head(lang) {
     name: 'Qutai',
     description: t['meta.appDescription'],
     applicationCategory: 'BrowserApplication',
-    operatingSystem: 'iOS, Android',
+    operatingSystem: 'iOS, iPadOS, macOS, Android',
     url: pageUrl(lang),
     inLanguage: lang,
     isAccessibleForFree: true,

@@ -350,7 +350,7 @@ export function Privacy() {
   );
 }
 
-const BROWSER: { icon: IconName; key: 'tabs' | 'reader' | 'blocking' | 'audio' | 'private' | 'backup' | 'bookmarks' | 'voice' | 'save' | 'styles' | 'cookies' | 'images' }[] = [
+const BROWSER: { icon: IconName; key: 'tabs' | 'reader' | 'blocking' | 'audio' | 'private' | 'backup' | 'bookmarks' | 'voice' | 'save' | 'styles' | 'cookies' | 'images' | 'desktop' }[] = [
   { icon: 'tabs', key: 'tabs' },
   { icon: 'reader', key: 'reader' },
   { icon: 'shield', key: 'blocking' },
@@ -363,6 +363,7 @@ const BROWSER: { icon: IconName; key: 'tabs' | 'reader' | 'blocking' | 'audio' |
   { icon: 'palette', key: 'styles' },
   { icon: 'cookie', key: 'cookies' },
   { icon: 'image', key: 'images' },
+  { icon: 'desktop', key: 'desktop' },
 ];
 
 export function BrowserFeatures() {

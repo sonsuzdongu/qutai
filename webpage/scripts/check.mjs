@@ -131,7 +131,7 @@ for (const lang of ['en', 'tr']) {
   expect(html.includes(`<link rel="canonical" href="`) && html.includes('hreflang="x-default"'), `${lang}/features: canonical and hreflang`);
   expect(!/<script\b/.test(html), `${lang}/features: no script`);
   expect(!/\sstyle="/.test(html), `${lang}/features: no inline style (the CSP forbids it)`);
-  expect((html.match(/class="fgroup"/g) ?? []).length === 10, `${lang}/features: ten groups`);
+  expect((html.match(/class="fgroup"/g) ?? []).length === 11, `${lang}/features: eleven groups`);
   const loaded = [...html.matchAll(/\s(?:src|href)="([^"]+)"/g)].map((m) => m[1]).filter((u) => !u.startsWith('#'));
   for (const url of loaded.filter((u) => /^(https?:)?\/\//.test(u) && !/rel="(?:canonical|alternate)"/.test(u))) {
     expect(!html.includes(`<link rel="stylesheet" href="${url}"`) && !html.includes(`src="${url}"`), `${lang}/features: loads ${url}`);

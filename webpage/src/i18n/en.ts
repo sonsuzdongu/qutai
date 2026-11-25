@@ -6,10 +6,10 @@
 export const en = {
   'meta.title': 'Qutai: Agentic Browser',
   'meta.description':
-    'Qutai is the AI assistant in your phone’s browser: an open-source browser for iPhone and Android whose assistant reads the page when you ask and uses it for you, with Qutai Credits or your own AI key; keeps your data on your phone and asks before sensitive actions. In development.',
+    'Qutai is the AI assistant in your phone’s browser: an open-source browser for iPhone, iPad, Mac with Apple silicon and Android whose assistant reads the page when you ask and uses it for you, with Qutai Credits or your own AI key; keeps your data on your phone and asks before sensitive actions. In development.',
   'meta.ogAlt': 'The Qutai logo, a blue Q, next to the words: Qutai, Agentic Browser.',
   'meta.appDescription':
-    'An open-source AI browser for iOS and Android whose assistant reads a web page when you ask and uses it for you, with Qutai Credits or your own AI provider key.',
+    'An open-source AI browser for iPhone, iPad, Mac with Apple silicon and Android whose assistant reads a web page when you ask and uses it for you, with Qutai Credits or your own AI provider key.',
 
   'nav.skip': 'Skip to content',
   'nav.label': 'Sections',
@@ -33,9 +33,9 @@ export const en = {
   'hero.title': 'Built with AI. Built for AI.',
   'hero.tagline': 'The AI assistant in your phone’s browser.',
   'hero.lede':
-    'Qutai is a browser for iPhone and Android whose assistant reads the page when you ask, and uses it for you.',
+    'Qutai is a browser for iPhone, iPad, Mac with Apple silicon and Android whose assistant reads the page when you ask, and uses it for you.',
   'hero.github': 'View on GitHub',
-  'hero.status': 'In development. Coming to the App Store and Google Play; not released yet.',
+  'hero.status': 'In development. Coming to the App Store (iPhone, iPad and Mac) and Google Play; not released yet.',
 
   'hero.chip1': 'Reads your tabs',
   'hero.chip2': 'Remembers you',
@@ -208,6 +208,9 @@ export const en = {
     'Dictate tasks with the phone’s own speech recognition, on the device when the phone and language allow. Hold the Q button to talk without opening the panel; Qutai listens in the language of your conversation.',
   'browser.save.title': 'PDF and full-page screenshots',
   'browser.save.body': 'Save a page as PDF or a stitched screenshot of the whole page, or keep it for offline reading.',
+  'browser.desktop.title': 'On iPad and Mac',
+  'browser.desktop.body':
+    'Tabs in a strip like a desktop browser, the address bar at the top, ⌘T, ⌘W, ⌘L and the other browser shortcuts, and ⌥Space held down to talk to Qutai. Sites get their desktop layout.',
   'browser.more': 'See every feature, with example requests',
   'browser.styles.title': 'Your own look for any site',
   'browser.styles.body':
@@ -273,7 +276,7 @@ export const en = {
   'status.today.8': 'Your own styles for sites, a page’s cookie list whose values never go to the AI, and scripts on pages (off by default, approved with the code shown)',
   'status.today.9': 'Small apps the assistant writes for you inside Qutai: offline, kept apart from your browsing, with versions to go back to',
   'status.limits': 'Limits to know',
-  'status.limits.1': 'Background tasks are Android-only and opt-in, with a notification when a task ends or needs you; on iPhone a task pauses when you leave the app',
+  'status.limits.1': 'Background tasks are Android-only and opt-in, with a notification when a task ends or needs you; on iPhone, iPad and Mac a task pauses when you leave the app',
   'status.limits.2': 'Scheduled tasks are reminders: nothing runs while Qutai is closed',
   'status.limits.3': 'You complete payments yourself, unless you let the assistant pay; then each payment waits for your approval in Qutai’s window',
   'status.limits.4': 'Sharing to Qutai and the home screen widget are Android-only for now',
@@ -304,20 +307,20 @@ export const en = {
   'policy.metaDescription':
     'The privacy policy of the Qutai app: what stays on your phone, what leaves it and to whom, your Qutai account and Qutai Credits.',
   'policy.updated': 'Last updated',
-  'policy.note': 'This is the privacy policy of the Qutai app for iPhone and Android, the same text the app shows.',
+  'policy.note': 'This is the privacy policy of the Qutai app for iPhone, iPad, Mac and Android, the same text the app shows.',
   'policy.home': 'Back to the Qutai home page',
 
   'terms.metaTitle': 'Terms of Use · Qutai',
   'terms.metaDescription':
     'The terms of use of the Qutai app: your AI key and Qutai Credits, websites, the assistant, ad blocking, page styles and scripts, apps, downloads, acceptable use and your rights.',
-  'terms.note': 'These are the terms of use of the Qutai app for iPhone and Android, the same text the app shows.',
+  'terms.note': 'These are the terms of use of the Qutai app for iPhone, iPad, Mac and Android, the same text the app shows.',
 
   'deletion.metaTitle': 'Delete your Qutai account · Qutai',
   'deletion.metaDescription': 'How to delete your Qutai account and its data, in the app or by email without the app, and what is deleted and kept.',
   'deletion.title': 'Delete your Qutai account',
-  'deletion.intro': 'This page is for the Qutai app for iPhone and Android. You can delete your Qutai account and the data kept with it on Qutai’s server at any time, in the app or, without the app, by email.',
+  'deletion.intro': 'This page is for the Qutai app for iPhone, iPad, Mac and Android. You can delete your Qutai account and the data kept with it on Qutai’s server at any time, in the app or, without the app, by email.',
   'deletion.inApp.heading': 'In the app',
-  'deletion.inApp.body': '• Open Qutai, then Settings › Account.\n• Tap Delete account and confirm.\n• If you signed in with Apple, your iPhone asks you to confirm with Apple once more, so Qutai can also withdraw its access at Apple.\nThe account is deleted at once and you are signed out on every device.',
+  'deletion.inApp.body': '• Open Qutai, then Settings › Account.\n• Tap Delete account and confirm.\n• If you signed in with Apple, your iPhone, iPad or Mac asks you to confirm with Apple once more, so Qutai can also withdraw its access at Apple.\nThe account is deleted at once and you are signed out on every device.',
   'deletion.byEmail.heading': 'Without the app',
   'deletion.byEmail.body': 'Write to {email} from the email address you use for Qutai (for an Apple or Google sign-in, the address shown under Settings › Account), with the subject “Delete my Qutai account”. We may send a code to that address to make sure the request is yours. We delete the account within 30 days, usually much sooner, and write back when it is done.',
   'deletion.deleted.heading': 'What is deleted',
@@ -329,13 +332,13 @@ export const en = {
   'deletion.home': 'Back to the Qutai home page',
 
   'support.metaTitle': 'Support · Qutai',
-  'support.metaDescription': 'Help with the Qutai app for iPhone and Android: how to reach us, what to include in your message, and answers to common questions.',
+  'support.metaDescription': 'Help with the Qutai app for iPhone, iPad, Mac and Android: how to reach us, what to include in your message, and answers to common questions.',
   'support.title': 'Qutai support',
-  'support.intro': 'Help with the Qutai app for iPhone and Android.',
+  'support.intro': 'Help with the Qutai app for iPhone, iPad, Mac and Android.',
   'support.contact.heading': 'Contact us',
   'support.contact.body': 'Write to {email}. We usually answer within a few working days.',
   'support.include.heading': 'What to include',
-  'support.include.body': '• The app version, from Settings › About\n• Your phone model\n• What you did, what happened and what you expected; a screenshot helps\nPlease never send passwords, card numbers or one-time codes.',
+  'support.include.body': '• The app version, from Settings › About\n• Your device: phone or tablet model, or Mac\n• What you did, what happened and what you expected; a screenshot helps\nPlease never send passwords, card numbers or one-time codes.',
   'support.faq.heading': 'Common questions',
   'support.signIn.q': 'How do I sign in to use Qutai Credits?',
   'support.signIn.a': 'Choose Qutai Credits during setup, or open Settings › Account, and sign in with Apple, Google or a code sent to your email (the choices depend on your phone). Qutai Credits need a Qutai account; your own AI key doesn’t.',

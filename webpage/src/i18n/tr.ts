@@ -7,10 +7,10 @@ import type { Messages } from './en';
 export const tr: Messages = {
   'meta.title': 'Qutai: Agentic Browser',
   'meta.description':
-    'Qutai, iPhone ve Android için açık kaynak bir tarayıcı; içindeki yapay zekâ asistanı, istediğinizde sayfayı okur ve sizin için kullanır. Qutai Kredileriyle ya da kendi AI anahtarınızla çalışır, verileriniz telefonunuzda kalır, önemli bir adımdan önce size sorar. Henüz geliştirme aşamasında.',
+    'Qutai, iPhone, iPad, Apple silicon işlemcili Mac ve Android için açık kaynak bir tarayıcı; içindeki yapay zekâ asistanı, istediğinizde sayfayı okur ve sizin için kullanır. Qutai Kredileriyle ya da kendi AI anahtarınızla çalışır, verileriniz telefonunuzda kalır, önemli bir adımdan önce size sorar. Henüz geliştirme aşamasında.',
   'meta.ogAlt': 'Mavi Q harfinden oluşan Qutai logosu ve yanında: Qutai, Agentic Browser.',
   'meta.appDescription':
-    'iPhone ve Android için açık kaynak, yapay zekâ asistanlı bir tarayıcı: asistan, istediğinizde web sayfasını okur ve Qutai Kredileriyle ya da kendi AI anahtarınızla sizin için kullanır.',
+    'iPhone, iPad, Apple silicon işlemcili Mac ve Android için açık kaynak, yapay zekâ asistanlı bir tarayıcı: asistan, istediğinizde web sayfasını okur ve Qutai Kredileriyle ya da kendi AI anahtarınızla sizin için kullanır.',
 
   'nav.skip': 'İçeriğe geç',
   'nav.label': 'Bölümler',
@@ -33,9 +33,9 @@ export const tr: Messages = {
   'hero.eyebrow': 'Yapay zekâ odaklı tarayıcı',
   'hero.title': 'Yapay zekâyla, yapay zekâ için yapıldı.',
   'hero.tagline': 'Telefonunuzun tarayıcısında çalışan yapay zekâ asistanınız.',
-  'hero.lede': 'Qutai, istediğinizde sayfayı okuyup sizin için kullanan bir asistanla gelen iPhone ve Android tarayıcısı.',
+  'hero.lede': 'Qutai, istediğinizde sayfayı okuyup sizin için kullanan bir asistanla gelen iPhone, iPad, Apple silicon işlemcili Mac ve Android tarayıcısı.',
   'hero.github': 'GitHub’da inceleyin',
-  'hero.status': 'Geliştirme aşamasında. App Store ve Google Play için hazırlanıyor; henüz yayımlanmadı.',
+  'hero.status': 'Geliştirme aşamasında. App Store (iPhone, iPad ve Mac) ve Google Play için hazırlanıyor; henüz yayımlanmadı.',
 
   'hero.chip1': 'Sekmeleri okur',
   'hero.chip2': 'Sizi hatırlar',
@@ -216,6 +216,9 @@ export const tr: Messages = {
   'browser.save.title': 'PDF ve tam sayfa ekran görüntüsü',
   'browser.save.body':
     'Sayfayı PDF olarak ya da tamamının tek parça ekran görüntüsü olarak kaydedin, çevrimdışı okumak için saklayın.',
+  'browser.desktop.title': 'iPad’de ve Mac’te',
+  'browser.desktop.body':
+    'Masaüstü tarayıcılardaki gibi şerit hâlinde sekmeler, üstte adres çubuğu, ⌘T, ⌘W, ⌘L ve diğer tarayıcı kısayolları; Qutai ile konuşmak için ⌥Boşluk’a basılı tutun. Siteler masaüstü görünümlerini gösterir.',
   'browser.more': 'Bütün özellikler, örnek isteklerle',
   'browser.styles.title': 'Her site, istediğiniz görünümde',
   'browser.styles.body':
@@ -288,7 +291,7 @@ export const tr: Messages = {
     'Asistanın Qutai içinde sizin için yazdığı küçük uygulamalar: internetsiz, tarayıcıdan ayrı, eski sürümlerine dönülebilen',
   'status.limits': 'Bilmeniz gereken sınırlar',
   'status.limits.1':
-    'Arka planda çalışma yalnızca Android’de ve siz açarsanız; görev bitince ya da size ihtiyaç olunca bildirim gelir. iPhone’da uygulamadan çıkınca görev duraklar',
+    'Arka planda çalışma yalnızca Android’de ve siz açarsanız; görev bitince ya da size ihtiyaç olunca bildirim gelir. iPhone, iPad ve Mac’te uygulamadan çıkınca görev duraklar',
   'status.limits.2': 'Zamanlanmış görevler aslında hatırlatmadır: Qutai kapalıyken hiçbir şey çalışmaz',
   'status.limits.3':
     'Ödemeyi siz yaparsınız; asistanın ödemesine izin verirseniz her ödeme Qutai penceresinde onayınızı bekler',
@@ -321,20 +324,20 @@ export const tr: Messages = {
   'policy.metaDescription':
     'Qutai uygulamasının gizlilik politikası: telefonunuzda kalanlar, telefonunuzdan çıkanlar ve kime gittiği, Qutai hesabınız ve Qutai Kredileri.',
   'policy.updated': 'Son güncelleme',
-  'policy.note': 'Qutai’ın iPhone ve Android uygulamasının gizlilik politikası; uygulamada gösterilen metnin aynısı.',
+  'policy.note': 'Qutai’ın iPhone, iPad, Mac ve Android uygulamasının gizlilik politikası; uygulamada gösterilen metnin aynısı.',
   'policy.home': 'Qutai ana sayfasına dön',
 
   'terms.metaTitle': 'Kullanım Koşulları · Qutai',
   'terms.metaDescription':
     'Qutai uygulamasının kullanım koşulları: yapay zekâ anahtarınız ve Qutai Kredileri, siteler, asistan, reklam engelleme, sayfa stilleri ve betikler, uygulamalar, indirmeler, kabul edilebilir kullanım ve haklarınız.',
-  'terms.note': 'Qutai’ın iPhone ve Android uygulamasının kullanım koşulları; uygulamada gösterilen metnin aynısı.',
+  'terms.note': 'Qutai’ın iPhone, iPad, Mac ve Android uygulamasının kullanım koşulları; uygulamada gösterilen metnin aynısı.',
 
   'deletion.metaTitle': 'Qutai hesabınızı silin · Qutai',
   'deletion.metaDescription': 'Qutai hesabınızı ve verilerini nasıl silersiniz: uygulamada ya da uygulama olmadan e-postayla; neyin silindiği ve neyin kaldığı.',
   'deletion.title': 'Qutai hesabınızı silin',
-  'deletion.intro': 'Bu sayfa Qutai’ın iPhone ve Android uygulaması içindir. Qutai hesabınızı ve onunla birlikte Qutai’ın sunucusunda tutulan verileri istediğiniz an silebilirsiniz: uygulamada ya da uygulama olmadan e-postayla.',
+  'deletion.intro': 'Bu sayfa Qutai’ın iPhone, iPad, Mac ve Android uygulaması içindir. Qutai hesabınızı ve onunla birlikte Qutai’ın sunucusunda tutulan verileri istediğiniz an silebilirsiniz: uygulamada ya da uygulama olmadan e-postayla.',
   'deletion.inApp.heading': 'Uygulamada',
-  'deletion.inApp.body': '• Qutai’ı açın, ardından Ayarlar › Hesap’a gidin.\n• Hesabı sil’e dokunun ve onaylayın.\n• Apple ile giriş yaptıysanız iPhone’unuz bir kez daha Apple ile onaylamanızı ister; böylece Qutai, Apple’daki erişimini de geri çeker.\nHesap hemen silinir ve tüm cihazlarda oturumunuz kapanır.',
+  'deletion.inApp.body': '• Qutai’ı açın, ardından Ayarlar › Hesap’a gidin.\n• Hesabı sil’e dokunun ve onaylayın.\n• Apple ile giriş yaptıysanız iPhone’unuz, iPad’iniz ya da Mac’iniz bir kez daha Apple ile onaylamanızı ister; böylece Qutai, Apple’daki erişimini de geri çeker.\nHesap hemen silinir ve tüm cihazlarda oturumunuz kapanır.',
   'deletion.byEmail.heading': 'Uygulama olmadan',
   'deletion.byEmail.body': 'Qutai’da kullandığınız e-posta adresinden (Apple ya da Google ile giriş yaptıysanız Ayarlar › Hesap’ta görünen adresten) {email} adresine “Qutai hesabımı silin” konulu bir e-posta gönderin. İsteğin size ait olduğundan emin olmak için o adrese bir kod gönderebiliriz. Hesabı en geç 30 gün içinde, genellikle çok daha önce siler ve işlem bitince size yazarız.',
   'deletion.deleted.heading': 'Neler silinir',
@@ -346,13 +349,13 @@ export const tr: Messages = {
   'deletion.home': 'Qutai ana sayfasına dön',
 
   'support.metaTitle': 'Destek · Qutai',
-  'support.metaDescription': 'iPhone ve Android için Qutai uygulamasıyla ilgili yardım: bize nasıl ulaşacağınız, mesajınıza neler ekleyeceğiniz ve sık sorulan sorular.',
+  'support.metaDescription': 'iPhone, iPad, Mac ve Android için Qutai uygulamasıyla ilgili yardım: bize nasıl ulaşacağınız, mesajınıza neler ekleyeceğiniz ve sık sorulan sorular.',
   'support.title': 'Qutai destek',
-  'support.intro': 'iPhone ve Android için Qutai uygulamasıyla ilgili yardım.',
+  'support.intro': 'iPhone, iPad, Mac ve Android için Qutai uygulamasıyla ilgili yardım.',
   'support.contact.heading': 'Bize yazın',
   'support.contact.body': '{email} adresine yazın. Genellikle birkaç iş günü içinde yanıt veririz.',
   'support.include.heading': 'Mesajınıza ekleyin',
-  'support.include.body': '• Uygulamanın sürümü (Ayarlar › Hakkında)\n• Telefonunuzun modeli\n• Ne yaptığınız, ne olduğu ve ne beklediğiniz; bir ekran görüntüsü de yardımcı olur\nLütfen şifre, kart numarası ya da tek kullanımlık kod göndermeyin.',
+  'support.include.body': '• Uygulamanın sürümü (Ayarlar › Hakkında)\n• Cihazınız: telefonunuzun ya da tabletinizin modeli veya Mac\n• Ne yaptığınız, ne olduğu ve ne beklediğiniz; bir ekran görüntüsü de yardımcı olur\nLütfen şifre, kart numarası ya da tek kullanımlık kod göndermeyin.',
   'support.faq.heading': 'Sık sorulan sorular',
   'support.signIn.q': 'Qutai Kredilerini kullanmak için nasıl giriş yaparım?',
   'support.signIn.a': 'Kurulumda Qutai Kredileri’ni seçin ya da Ayarlar › Hesap’ı açın; Apple, Google ya da e-postanıza gelen bir kodla giriş yapın (seçenekler telefonunuza göre değişir). Qutai Kredileri için bir Qutai hesabı gerekir; kendi yapay zekâ anahtarınız için gerekmez.',
