@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 881 decisions (137 owner, 662 default, 82 waiting); 163 ids moved to Details.
+Totals: 882 decisions (137 owner, 663 default, 82 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -1086,7 +1086,7 @@ Moved to Details (ids retired, not reused): `PERF-1`, `PERF-2`, `PERF-9`
 | `ACC-34` | Only the signed-in account can start a combine, by a full sign-in to one of the other account's own… | Default |  |
 | `ACC-35` | The signed-in account survives a combine; the combine is final, the other account never signs in again and… | Default |  |
 | `ACC-36` | Today someone who controls one method of another account (for example a stolen Google account) can combine… | **Waiting** |  |
-| `ACC-37` | A combine moves the whole balance including a debt, purchase records (a later refund is taken from the… | Default |  |
+| `ACC-37` | A combine moves the whole balance including a debt, purchase records (a later refund is taken from the… | Default | changed 2026-11-26 |
 | `ACC-39` | "Sign out of all devices" ends every session of the account and kills pending email codes for its addresses. | Default |  |
 | `ACC-40` | Deleting the account ends its sessions, withdraws Sign in with Apple, wipes the credit ledger, deletes its… | Default |  |
 | `ACC-41` | The server keeps Apple's renewal token only encrypted and only to withdraw access at deletion or removal;… | Default |  |
@@ -1101,7 +1101,7 @@ Moved to Details (ids retired, not reused): `PERF-1`, `PERF-2`, `PERF-9`
 | `ACC-51` | Today the sign-in methods are Apple, Google and email; no other provider. | **Waiting** |  |
 | `ACC-52` | Each sign-in method shows its address (Google and Apple from their own token, kept per method on the server); an Apple relay… | Owner | 2026-11-19 |
 | `ACC-53` | A sign-in or rotated token the phone can't save: three tries, kept in memory, saved before every request, the user told once; a failed sign-out clear told | Default | 2026-11-20 |
-| `ACC-54` | A store-review account signs in by email with a fixed code while the server's review_login switch is on (off by default; sign-in only… | Owner | 2026-11-21 |
+| `ACC-54` | A store-review account signs in by email with a fixed code while the server's review_login switch is on (off by default; sign-in only… | Owner | changed 2026-11-26 |
 | `ACC-55` | Settings › Account has no "Add a sign-in method"; a second way in comes from Combine with another account. | Owner | 2026-11-24 |
 | `ACC-56` | Combine with another account adds a sign-in that has no Qutai account yet to this one (server, one step); another account's still needs the combine confirmation. | Owner | 2026-11-24 |
 
@@ -1127,7 +1127,7 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-14` | Before each step the server reserves the most it can cost (output limit, searches and their results, dearest tier)… | Default | changed 2026-11-22 |
 | `CRED-15` | A provider error or the app leaving before any output costs nothing; a cut answer is charged on what was seen plus an… | Default | changed 2026-11-20 |
 | `CRED-16` | A charge that arrives after the hold expired still charges the real cost, even if the balance goes negative. | Default |  |
-| `CRED-17` | An identical re-send of a step within 15 minutes is free once only if a charged attempt was cut or estimated… | Default | changed 2026-11-20 |
+| `CRED-17` | An identical re-send of a step within 15 minutes is free once only if a charged attempt was cut or estimated… | Default | changed 2026-11-26 |
 | `CRED-18` | A balance may go negative after a refund, and a negative balance blocks spending until topped up. | Default |  |
 | `CRED-19` | Without per-user limits, relay rules or pricing the relay refuses (fail closed); a missing field reads its default… | Default | changed 2026-11-20 |
 | `CRED-22` | An Anthropic answer paused mid-search continues only with a continuation the server signed (tied to the… | Default |  |
@@ -1202,6 +1202,7 @@ Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 | `BUY-35` | The kept list of uncredited purchases is never written over when it couldn't be read; unsaved changes stay in memory | Default | 2026-11-21 |
 | `BUY-36` | The missing-credits check asks about all kept purchases at once, once each, no waits; no waiting count on the screen. | Owner | 2026-11-24 |
 | `BUY-37` | A pack's credits are changed in the admin panel (Credits…, whole credits 1–1,000,000, both stores, audited); only purchases recorded after the save get it. | Owner | 2026-11-25 |
+| `BUY-38` | A purchase recorded without an owner is given to the buyer whose report proves it, and credited once. | Default | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `BUY-14`, `BUY-20`
 
