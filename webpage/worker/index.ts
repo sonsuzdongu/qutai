@@ -29,6 +29,13 @@ export default {
     // App Links / Universal Links files, only when configured (worker/wellKnown.ts).
     const known = wellKnown(url.pathname, env);
     if (known) return known;
+    // Google Search Console's verification file (public/google….html) must answer 200 at exactly this address; the
+    // assets' html_handling would otherwise redirect it to the address without ".html".
+    if (/^\/google[0-9a-f]+\.html$/.test(url.pathname)) {
+      const file = await env.ASSETS.fetch(new URL(url.pathname.slice(0, -'.html'.length), url));
+      if (!file.ok) return file;
+      return new Response(await file.text(), { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
+    }
     if (url.pathname === INTENT_PATH || url.pathname === `${INTENT_PATH}/`) {
       if (request.method !== 'GET' && request.method !== 'HEAD') return new Response(null, { status: 405, headers: { Allow: 'GET, HEAD' } });
       return intentPage(request, intentConfig(env));

@@ -19,6 +19,7 @@ Last updated: 2026-11-26
 Newest first, one line per change to the design. What happened before 19 Nov 2026 is in
 [docs/design/history.md](docs/design/history.md).
 
+- **2026-11-26:** Website: Google Search Console's verification file is served at the site root, answering 200 at its exact `.html` address through the Worker (owner).
 - **2026-11-26:** Website and llms.txt name the app's ten interface languages (home tile, features page, structured data) (`WEB-17`, `LANG-1`, `LANG-7`; owner).
 - **2026-11-26:** Website: the short addresses `/pricing` and `/terms` now redirect by language as `WEB-14` and `WEB-15` say (they answered 404: missing from the Worker-first routes); `npm run check` now catches a missing one.
 - **2026-11-26:** Website for search and AI answers: "What is an agentic browser?" guide, a Qutai vs … page per competitor, `/llms.txt`, offers in structured data; README opens with "open-source agentic AI browser for Android and iPhone" (`WEB-17`; owner).
