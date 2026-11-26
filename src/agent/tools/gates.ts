@@ -129,7 +129,7 @@ export async function hiddenGate(
   host: string | null,
   ctx: ToolContext,
   tab: Tab | undefined,
-): Promise<{ kind: 'run' } | { kind: 'refuse'; reason: string; notice: StepNotice }> {
+): Promise<{ kind: 'run' | 'asked' } | { kind: 'refuse'; reason: string; notice: StepNotice }> {
   if (!host || !/^https:\/\//i.test(url)) {
     return {
       kind: 'refuse',
@@ -161,7 +161,8 @@ export async function hiddenGate(
   const incognito = !!(ctx.privacy?.touchedIncognito || tab?.incognito);
   if (await ctx.confirmHidden(host, hiddenWhat(memory), field, incognito)) {
     ctx.personalGrants?.allowed.add(key);
-    return { kind: 'run' };
+    // The user has just answered for this very action; a later use of the grant hasn't been asked about (TOOL-34).
+    return { kind: 'asked' };
   }
   ctx.personalGrants?.declined.add(key);
   return declined;

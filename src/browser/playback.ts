@@ -2,7 +2,8 @@ import { Platform } from 'react-native';
 import type { ComponentRef } from 'react';
 import type { WebView } from 'react-native-webview';
 import { newNonce } from '../utils/ids';
-import { realPlayKey } from './autoplay';
+import { AUTOPLAY_GUARD } from './autoplay';
+import { derivedKey } from './pageKeys';
 
 /**
  * Media playing in web pages: which tab is audible (tab switcher speaker, tabs that must not sleep), and the
@@ -23,7 +24,7 @@ import { realPlayKey } from './autoplay';
  * runs without React Native while the app is in the background) treats a tab as silent when those reports stop.
  *
  * Frames: on iOS the script runs in every frame and a frame reports to the page above it (window.postMessage
- * with the nonce); the main frame adds the frames' state to its own. On Android scripts reach the main frame only,
+ * with the tab's frame key, never the nonce, and hidden from the page's own listeners: pageKeys.ts); the main frame adds the frames' state to its own. On Android scripts reach the main frame only,
  * so media playing inside a frame (an embedded player) isn't seen there.
  *
  * Incognito tabs on iOS: WebKit shows the page's Media Session metadata on the lock screen itself, so in incognito
@@ -73,7 +74,12 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
   return `(function () {
   if (window.__qutaiPlaybackInstalled) return;
   Object.defineProperty(window, '__qutaiPlaybackInstalled', { value: true });
+  // Called directly, never through Function.prototype.call / .apply: a page can replace those and read what passes
+  // through them (the nonce in a message to the app), or make a call do nothing.
+  var apply = window.Reflect && window.Reflect.apply;
+  if (typeof apply !== 'function') return;
   var NONCE = ${JSON.stringify(nonce)};
+  var FRAMES = ${JSON.stringify(derivedKey(nonce, 'frames'))};
   var PRIVATE = ${incognito ? 'true' : 'false'};
   var PRIVATE_LABEL = ${JSON.stringify(privateLabel)};
   var POLYFILL = ${Platform.OS === 'android' ? 'true' : 'false'};
@@ -91,9 +97,14 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
   var now = Date.now;
   var proto = ME.prototype;
   // The page's play() goes through the autoplay guard when it is there (autoplay.ts); Qutai's own commands (lock
-  // screen, notification, PiP window) use the real one the guard keeps under this tab's name.
+  // screen, notification, PiP window) use the real one, which the guard gives for this tab's play key.
   var pagePlay = proto.play;
-  var realPlay = window[${JSON.stringify(realPlayKey(nonce))}] || pagePlay, realPause = proto.pause;
+  var guard = window[${JSON.stringify(AUTOPLAY_GUARD)}];
+  var handed = null;
+  try { handed = typeof guard === 'function' ? guard(${JSON.stringify(derivedKey(nonce, 'play'))}) : null; } catch (e) {}
+  var realPlay = typeof handed === 'function' ? handed : pagePlay, realPause = proto.pause;
+  var stopNow = window.Event && window.Event.prototype.stopImmediatePropagation;
+  function hush(e) { try { apply(stopNow, e, []); } catch (err) {} }
   function getter(target, name) { var d = target && Object.getOwnPropertyDescriptor(target, name); return d && d.get; }
   var gPaused = getter(proto, 'paused'), gEnded = getter(proto, 'ended'), gMuted = getter(proto, 'muted');
   var gVolume = getter(proto, 'volume'), gReady = getter(proto, 'readyState'), gDuration = getter(proto, 'duration');
@@ -125,11 +136,11 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
       info(el).startedAt = now();
       // A muted video (autoplay, a looping preview: 'playing' again on every loop) doesn't take over from one with
       // sound; the controls, the reported position and picture-in-picture stay with the media the user hears.
-      if (loud(el) || !current || gPaused.call(current) || !loud(current)) current = el;
+      if (loud(el) || !current || apply(gPaused, current, []) || !loud(current)) current = el;
     }
     schedule();
   }
-  function loud(el) { return !gMuted.call(el) && gVolume.call(el) > 0; }
+  function loud(el) { return !apply(gMuted, el, []) && apply(gVolume, el, []) > 0; }
   function track(el) {
     for (var i = 0; i < elements.length; i++) if (elements[i] === el) return;
     elements[elements.length] = el;
@@ -139,7 +150,7 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
   }
   try {
     Object.defineProperty(proto, 'play', {
-      value: function play() { track(this); schedule(); return pagePlay.apply(this, arguments); },
+      value: function play() { track(this); schedule(); return apply(pagePlay, this, arguments); },
       writable: true, configurable: true,
     });
   } catch (e) {}
@@ -157,38 +168,38 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
     var audibleNow = function () {
       for (var i = 0; i < elements.length; i++) {
         var el = elements[i];
-        if (!gPaused.call(el) && !gEnded.call(el) && !gMuted.call(el) && gVolume.call(el) > 0) return true;
+        if (!apply(gPaused, el, []) && !apply(gEnded, el, []) && !apply(gMuted, el, []) && apply(gVolume, el, []) > 0) return true;
       }
       return false;
     };
     var log = function (text) {
       if (!DEBUG) return;
-      try { post.call(bridge, stringify({ __qutaiPlaybackLog: NONCE, at: now(), text: text, frame: !mainFrame })); } catch (e) {}
+      try { apply(post, bridge, [stringify({ __qutaiPlaybackLog: NONCE, at: now(), text: text, frame: !mainFrame })]); } catch (e) {}
     };
     var resume = function (el, why) {
       var count = 0;
       for (var i = 0; i < attempts.length; i++) if (attempts[i] === el) count++;
-      if (count >= 3 || !gPaused.call(el) || gEnded.call(el)) return;
+      if (count >= 3 || !apply(gPaused, el, []) || apply(gEnded, el, [])) return;
       attempts[attempts.length] = el;
       log('resume (' + why + ', try ' + (count + 1) + ')');
       try {
-        var p = realPlay.call(el);
+        var p = apply(realPlay, el, []);
         if (p && p.then) p.then(function () { log('play() resolved'); }, function (err) { log('play() rejected: ' + (err && err.name)); });
       } catch (err) { log('play() threw: ' + (err && err.name)); }
     };
     // Real visibility, for the app's own logic; the page sees "visible" while masking.
-    var reallyHidden = function () { return gVisibility.call(document) !== 'visible'; };
+    var reallyHidden = function () { return apply(gVisibility, document, []) !== 'visible'; };
     try {
       Object.defineProperty(docProto, 'visibilityState', {
-        get: function () { return masking ? 'visible' : gVisibility.call(this); }, configurable: true,
+        get: function () { return masking ? 'visible' : apply(gVisibility, this, []); }, configurable: true,
       });
       Object.defineProperty(docProto, 'hidden', {
-        get: function () { return masking ? false : gHidden.call(this); }, configurable: true,
+        get: function () { return masking ? false : apply(gHidden, this, []); }, configurable: true,
       });
       var gWebkitHidden = getter(docProto, 'webkitHidden');
       if (gWebkitHidden) {
         Object.defineProperty(docProto, 'webkitHidden', {
-          get: function () { return masking ? false : gWebkitHidden.call(this); }, configurable: true,
+          get: function () { return masking ? false : apply(gWebkitHidden, this, []); }, configurable: true,
         });
       }
     } catch (e) {}
@@ -196,7 +207,7 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
     // reacting to it. Pauses within a few seconds of leaving are undone (each element at most 3 times).
     document.addEventListener('pause', function (e) {
       var el = e.target;
-      if (!(el instanceof ME) || gEnded.call(el) || gMuted.call(el) || !(gVolume.call(el) > 0)) return;
+      if (!(el instanceof ME) || apply(gEnded, el, []) || apply(gMuted, el, []) || !(apply(gVolume, el, []) > 0)) return;
       var t = now();
       log('pause, hidden=' + reallyHidden() + ', ' + (hiddenAt ? t - hiddenAt : -1) + ' ms after hide');
       if (!reallyHidden()) { recentPauses[recentPauses.length] = { el: el, at: t }; return; }
@@ -262,7 +273,7 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
           value: function setActionHandler(action, handler) {
             handlers[String(action)] = typeof handler === 'function' ? handler : null;
             schedule();
-            return realSet.apply(this, arguments);
+            return apply(realSet, this, arguments);
           },
           writable: true, configurable: true,
         });
@@ -274,9 +285,9 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
       var generic = function () { try { return new MediaMetadata({ title: PRIVATE_LABEL }); } catch (e) { return null; } };
       try {
         Object.defineProperty(MediaSession.prototype, 'metadata', {
-          get: metaDesc.get, set: function () { metaDesc.set.call(this, generic()); }, configurable: false,
+          get: metaDesc.get, set: function () { apply(metaDesc.set, this, [generic()]); }, configurable: false,
         });
-        metaDesc.set.call(navigator.mediaSession, generic());
+        apply(metaDesc.set, navigator.mediaSession, [generic()]);
       } catch (e) {}
     }
   }
@@ -285,12 +296,12 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
     var t = now(), audible = false, playing = false, video = null, loudVideo = null, loudest = null, keep = [];
     for (var i = 0; i < elements.length; i++) {
       var el = elements[i];
-      var paused = gPaused.call(el);
+      var paused = apply(gPaused, el, []);
       if (paused && !el.isConnected && el !== current) continue;
       keep[keep.length] = el;
-      if (paused || gEnded.call(el) || gReady.call(el) < 2) continue;
+      if (paused || apply(gEnded, el, []) || apply(gReady, el, []) < 2) continue;
       var data = info(el);
-      var time = timeDesc.get.call(el);
+      var time = apply(timeDesc.get, el, []);
       var advancing = time !== data.time || t - data.startedAt < HEARTBEAT + 2000;
       data.time = time;
       if (!advancing) continue;
@@ -300,12 +311,12 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
         audible = true;
         if (!loudest || el === current) loudest = el;
       }
-      if (VE && el instanceof VE && gWidth.call(el) > 0) {
+      if (VE && el instanceof VE && apply(gWidth, el, []) > 0) {
         if (!video || el === current) video = el;
         if (isLoud && (!loudVideo || el === current)) loudVideo = el;
       }
     }
-    if (loudest && (!current || gPaused.call(current) || !loud(current))) current = loudest;
+    if (loudest && (!current || apply(gPaused, current, []) || !loud(current))) current = loudest;
     // The video reported (its size and place, for picture-in-picture): the one with sound before a muted one.
     if (loudVideo) video = loudVideo;
     elements = keep;
@@ -347,7 +358,7 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
     var best = null, area = 0;
     var list = VE && fs instanceof VE ? [fs] : (fs.querySelectorAll ? fs.querySelectorAll('video') : []);
     for (var i = 0; i < list.length; i++) {
-      var w = gWidth.call(list[i]), h = gHeight.call(list[i]);
+      var w = apply(gWidth, list[i], []), h = apply(gHeight, list[i], []);
       if (w > 0 && h > 0 && w * h > area) { area = w * h; best = [w, h]; }
     }
     if (best) return best;
@@ -408,7 +419,7 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
     var request = el.requestFullscreen || el.webkitRequestFullscreen;
     if (!request) return;
     try {
-      var p = request.call(el, { navigationUI: 'hide' });
+      var p = apply(request, el, [{ navigationUI: 'hide' }]);
       pipFullscreen = el;
       if (p && p.catch) p.catch(function () { if (pipFullscreen === el) pipFullscreen = null; });
     } catch (e) { pipFullscreen = null; }
@@ -447,22 +458,22 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
     if (s.playing || frames.length) { if (!repeat) repeat = setRepeat(heartbeat, HEARTBEAT); }
     else if (repeat) { clearRepeat(repeat); repeat = null; }
     if (!mainFrame) {
-      try { window.parent.postMessage({ __qutaiPlaybackFrame: NONCE, audible: s.audible, playing: s.playing, full: fullVideo() }, '*'); } catch (e) {}
+      try { window.parent.postMessage({ __qutaiPlaybackFrame: FRAMES, audible: s.audible, playing: s.playing, full: fullVideo() }, '*'); } catch (e) {}
       return;
     }
     var meta = metadataOf();
     var actions = [];
     for (var name in handlers) if (handlers[name]) actions[actions.length] = name;
     var el = current;
-    var duration = el ? gDuration.call(el) : 0;
+    var duration = el ? apply(gDuration, el, []) : 0;
     lastVideo = s.video;
     var msg = {
       __qutaiPlayback: NONCE,
       audible: s.audible,
       playing: s.playing,
-      paused: el ? gPaused.call(el) : true,
-      ended: el ? gEnded.call(el) : false,
-      video: s.video ? [gWidth.call(s.video), gHeight.call(s.video)] : null,
+      paused: el ? apply(gPaused, el, []) : true,
+      ended: el ? apply(gEnded, el, []) : false,
+      video: s.video ? [apply(gWidth, s.video, []), apply(gHeight, s.video, [])] : null,
       full: fullVideo(),
       rect: s.video ? rectOf(s.video) : null,
       noPip: s.video ? pipRefused() : false,
@@ -472,14 +483,14 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
       artwork: meta.artwork,
       actions: actions,
       duration: isFinite(duration) && duration > 0 ? duration : 0,
-      rate: el ? gRate.call(el) : 1,
+      rate: el ? apply(gRate, el, []) : 1,
     };
     var key = stringify(msg);
     // Reported when something changed, and on every heartbeat while playing (the app's proof of life).
     if (key === lastKey && !s.playing) return;
     lastKey = key;
-    msg.position = el ? timeDesc.get.call(el) : 0;
-    try { post.call(bridge, stringify(msg)); } catch (e) {}
+    msg.position = el ? apply(timeDesc.get, el, []) : 0;
+    try { apply(post, bridge, [stringify(msg)]); } catch (e) {}
   }
   function heartbeat() { report(); }
   function schedule() {
@@ -489,7 +500,7 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
 
   function broadcast(action) {
     for (var i = 0; i < window.frames.length; i++) {
-      try { window.frames[i].postMessage({ __qutaiPlaybackCommand: NONCE, action: action }, '*'); } catch (e) {}
+      try { window.frames[i].postMessage({ __qutaiPlaybackCommand: FRAMES, action: action }, '*'); } catch (e) {}
     }
   }
   function command(action, seconds) {
@@ -499,7 +510,7 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
       for (i = 0; i < elements.length; i++) {
         var item = elements[i];
         if (document.pictureInPictureElement === item || item.webkitPresentationMode === 'picture-in-picture') continue;
-        try { realPause.call(item); } catch (e) {}
+        try { apply(realPause, item, []); } catch (e) {}
       }
       broadcast(action);
       return;
@@ -513,7 +524,7 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
       // Leaves the full screen that pipEnter started (PiP expanded back into the app, or closed).
       var fs = document.fullscreenElement || document.webkitFullscreenElement;
       if (pipFullscreen && fs === pipFullscreen) {
-        try { (document.exitFullscreen || document.webkitExitFullscreen).call(document); } catch (e) {}
+        try { apply((document.exitFullscreen || document.webkitExitFullscreen), document, []); } catch (e) {}
       }
       pipFullscreen = null;
       return;
@@ -529,18 +540,20 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
     var el = current;
     if (!el) return;
     try {
-      if (action === 'play') { var p = realPlay.call(el); if (p && p.catch) p.catch(function () {}); }
-      else if (action === 'pause' || action === 'stop') realPause.call(el);
-      else if (action === 'seekto' && typeof seconds === 'number') timeDesc.set.call(el, seconds);
-      else if (action === 'seekforward') timeDesc.set.call(el, timeDesc.get.call(el) + 10);
-      else if (action === 'seekbackward') timeDesc.set.call(el, Math.max(0, timeDesc.get.call(el) - 10));
+      if (action === 'play') { var p = apply(realPlay, el, []); if (p && p.catch) p.catch(function () {}); }
+      else if (action === 'pause' || action === 'stop') apply(realPause, el, []);
+      else if (action === 'seekto' && typeof seconds === 'number') apply(timeDesc.set, el, [seconds]);
+      else if (action === 'seekforward') apply(timeDesc.set, el, [apply(timeDesc.get, el, []) + 10]);
+      else if (action === 'seekbackward') apply(timeDesc.set, el, [Math.max(0, apply(timeDesc.get, el, []) - 10)]);
     } catch (e) {}
   }
 
   window.addEventListener('message', function (e) {
     var d = e.data;
     if (!d || typeof d !== 'object') return;
-    if (d.__qutaiPlaybackFrame === NONCE && mainFrame) {
+    // The page's own listeners (added after this one) never see these messages.
+    if (d.__qutaiPlaybackFrame === FRAMES || d.__qutaiPlaybackCommand === FRAMES) hush(e);
+    if (d.__qutaiPlaybackFrame === FRAMES && mainFrame) {
       var found = null;
       for (var i = 0; i < frames.length; i++) if (frames[i].source === e.source) found = frames[i];
       if (!found) { found = { source: e.source }; frames[frames.length] = found; }
@@ -549,10 +562,10 @@ export function playbackScript(nonce: string, incognito: boolean, privateLabel: 
       found.full = d.full && d.full.length === 2 && d.full[0] > 0 && d.full[1] > 0 ? [+d.full[0], +d.full[1]] : null;
       found.at = now();
       schedule();
-    } else if (d.__qutaiPlaybackFrame === NONCE) {
+    } else if (d.__qutaiPlaybackFrame === FRAMES) {
       // A frame inside a frame: passed up.
       try { window.parent.postMessage(d, '*'); } catch (err) {}
-    } else if (d.__qutaiPlaybackCommand === NONCE && !mainFrame && d.action === 'pauseAll') {
+    } else if (d.__qutaiPlaybackCommand === FRAMES && !mainFrame && d.action === 'pauseAll') {
       command('pauseAll');
     }
   }, true);

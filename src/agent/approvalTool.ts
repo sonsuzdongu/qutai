@@ -333,14 +333,41 @@ export async function pressGate(
   };
 }
 
+/** Stands in for a hidden value where a field is judged: long enough and in words, so a one-line field counts too. */
+const HIDDEN_AS_PROSE = 'a hidden saved value';
+
+const HIDDEN_ENTER_TEXT =
+  "Nothing was typed. A hidden saved value is never sent with Enter from a field for a message, comment or other free " +
+  "text: the user allowed it for this site's own form fields, not for something other people read. If the user asked " +
+  'for exactly this, tell them to enter it themselves.';
+
 /**
  * Before type with submit (Enter): an approval given for Enter in this field (button_ref = the field) is checked and
  * used up; Enter in a field that will hold free text to send, without one, is refused before anything is typed.
+ *
+ * `hidden`: the text is a hidden saved value (an ID or passport number, a locked memory), typed by the app. The
+ * user allowed it for the site, not for a message to other people, and the publish dialog can't show it, so Enter in
+ * a field for free text is always refused for it; in a form's own field (a number, a name, a search) it goes on as
+ * before (PAY-30).
  */
-export async function enterGate(input: Record<string, unknown>, ctx: ToolContext, tab: Tab): Promise<PressGate> {
+export async function enterGate(input: Record<string, unknown>, ctx: ToolContext, tab: Tab, hidden = false): Promise<PressGate> {
   const ref = typeof input.ref === 'number' ? input.ref : Number(input.ref);
-  const text = typeof input.text === 'string' ? input.text : '';
   if (!Number.isInteger(ref)) return { kind: 'none' };
+  if (hidden) {
+    let hiddenFacts;
+    try {
+      hiddenFacts = await ask(tab, 'enterFacts', [ref], parseEnterFacts);
+    } catch (e) {
+      return { kind: 'refuse', output: failed('what Enter would send', e) };
+    }
+    // The value is never looked at: any hidden value counts as prose, so only the field decides.
+    if (!hiddenFacts || !isPublicText(hiddenFacts, HIDDEN_AS_PROSE)) return { kind: 'none' };
+    return {
+      kind: 'refuse',
+      output: { content: HIDDEN_ENTER_TEXT, isError: true, notice: settingNotice(t('step.publishFirst')) },
+    };
+  }
+  const text = typeof input.text === 'string' ? input.text : '';
   const grant = ctx.approvals?.take(tab.id, ref) ?? null;
   if (grant && grant.kind === 'publish' && grant.fieldRef === ref) {
     let field;

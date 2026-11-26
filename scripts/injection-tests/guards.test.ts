@@ -90,6 +90,14 @@ test('a site is "named" by its domain or its name as a word, not by a part of a 
   assert.equal(namedByUser('hepsiburada.com', ['compare with hepsiburada.com']), true);
   assert.equal(namedByUser('kadikoy.bel.tr', ['Kadıköy library hours']), true);
   assert.equal(namedByUser('kettle-rewards.com', ['which kettle is cheapest']), false);
+  // A domain counts whole: not as the tail of another name, nor as the head of a longer domain.
+  assert.equal(namedByUser('yol.com', ['order it from trendyol.com']), false);
+  assert.equal(namedByUser('yol.com', ['yol.com.tr is the one I mean']), false);
+  assert.equal(namedByUser('burada.com', ['compare with hepsi-burada.com']), false);
+  assert.equal(namedByUser('trendyol.com', ['see https://www.trendyol.com/sepet.']), true);
+  assert.equal(namedByUser('trendyol.com', ['TRENDYOL.COM, please']), true);
+  assert.equal(namedByUser('trendyol.com', ['m.trendyol.com']), true);
+  assert.equal(namedByUser('a.b', ['aXb']), false);
   assert.equal(siteOf('https://shop.mutfakdunyasi.com.tr/x'), 'mutfakdunyasi.com.tr');
   assert.ok(urlParts('https://x.com/a%2520b?q=c+d#k=e').includes('a b'));
 });

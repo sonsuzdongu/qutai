@@ -12,18 +12,29 @@
  * own scripts look for navigator.share.
  */
 
+import { derivedKey } from './pageKeys';
+
 /** Longest title, text and address passed on (Chrome's own limit on the address is longer; enough for a share). */
 export const SHARE_LIMITS = { title: 1000, text: 20000, url: 8192 };
 
 export type ShareRequest = { id: string; title: string; text: string; url: string };
+
+/** The name on `window` under which the page hears a share's outcome: not the nonce itself (pageKeys.ts). */
+function shareDoneName(nonce: string): string {
+  return `__qutaiShareDone_${derivedKey(nonce, 'share')}`;
+}
 
 export function webShareScript(nonce: string): string {
   return String.raw`(function () {
   if (window.top !== window) return;
   var nav = window.navigator;
   if (!nav || 'share' in nav) return;
+  // Called directly, never through Function.prototype.call / .apply: a page can replace those and read what passes
+  // through them (the nonce in a message to the app), or make a call do nothing.
+  var apply = window.Reflect && window.Reflect.apply;
+  if (typeof apply !== 'function') return;
   var NONCE = ${JSON.stringify(nonce)};
-  var DONE = '__qutaiShareDone_' + NONCE;
+  var DONE = ${JSON.stringify(shareDoneName(nonce))};
   if (DONE in window) return;
   var bridge = window.ReactNativeWebView;
   var post = bridge && bridge.postMessage;
@@ -65,7 +76,7 @@ export function webShareScript(nonce: string): string {
       var id = String(next++);
       pending = { id: id, resolve: resolve, reject: reject };
       try {
-        post.call(bridge, stringify({ __qutaiShare: NONCE, id: id, title: d.title, text: d.text, url: d.url }));
+        apply(post, bridge, [stringify({ __qutaiShare: NONCE, id: id, title: d.title, text: d.text, url: d.url })]);
       } catch (e) {
         pending = null;
         reject(error('AbortError', 'Share canceled'));
@@ -133,6 +144,6 @@ export function shareContent(req: ShareRequest): { title?: string; message: stri
 
 /** The script that tells the page how its share ended (resolves or rejects its promise). */
 export function shareDoneScript(nonce: string, id: string, ok: boolean): string {
-  const fn = JSON.stringify(`__qutaiShareDone_${nonce}`);
+  const fn = JSON.stringify(shareDoneName(nonce));
   return `(function () { var f = window[${fn}]; if (typeof f === 'function') f(${JSON.stringify(id)}, ${ok}); })(); true;`;
 }

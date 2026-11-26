@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import { derivedKey } from './pageKeys';
 
 /**
  * "Let sites play videos with sound automatically" (Settings › Appearance › Media), off by default: a page can't
@@ -16,7 +17,8 @@ import { Platform } from 'react-native';
  * (srcObject) are never held back. With the setting on, the script isn't added.
  *
  * Plain ES5 in a string, like the page script. The real play() stays reachable for Qutai's own playback commands
- * (lock screen, notification) under a name only the playback script knows (playback.ts).
+ * (lock screen, notification): the guard hands it to whoever shows the tab's play key, which only the playback
+ * script has (playback.ts). Nothing on `window` and no message between frames carries the tab's nonce (pageKeys.ts).
  */
 
 /** The rule as the page runs it (tested in scripts/media-tests/autoplay.test.ts). */
@@ -26,10 +28,8 @@ function qutaiMayStart(muted, volume, stream, activated) {
 }
 `;
 
-/** Where the guard leaves the real HTMLMediaElement.prototype.play for the playback script (per tab nonce). */
-export function realPlayKey(nonce: string): string {
-  return `__qutaiRealPlay_${nonce}`;
-}
+/** The guard's one name on `window`: a function that gives the real play() for the tab's play key. */
+export const AUTOPLAY_GUARD = '__qutaiAutoplayGuard';
 
 /**
  * `browserActivation`: also trust the browser's own record of a user activation (`navigator.userActivation`, which
@@ -40,10 +40,16 @@ export function realPlayKey(nonce: string): string {
 export function autoplayGuardScript(nonce: string, browserActivation = Platform.OS === 'android'): string {
   return String.raw`(function () {
   var ME = window.HTMLMediaElement;
-  var KEY = ${JSON.stringify(realPlayKey(nonce))};
-  if (!ME || KEY in window) return;
+  var GUARD = ${JSON.stringify(AUTOPLAY_GUARD)};
+  var PLAY = ${JSON.stringify(derivedKey(nonce, 'play'))};
+  if (!ME || GUARD in window) return;
   ${AUTOPLAY_RULE}
-  var NONCE = ${JSON.stringify(nonce)};
+  // Called directly, never through Function.prototype.call / .apply: a page can replace those and read what passes
+  // through them (the nonce in a message to the app), or make a call do nothing.
+  var apply = window.Reflect && window.Reflect.apply;
+  var construct = window.Reflect && window.Reflect.construct;
+  if (typeof apply !== 'function' || typeof construct !== 'function') return;
+  var FRAMES = ${JSON.stringify(derivedKey(nonce, 'frames'))};
   var BROWSER_ACTIVATION = ${browserActivation ? 'true' : 'false'};
   var proto = ME.prototype;
   var realPlay = proto.play, realPause = proto.pause;
@@ -51,9 +57,10 @@ export function autoplayGuardScript(nonce: string, browserActivation = Platform.
   var permitted = typeof WeakSet === 'function' ? new WeakSet() : null;
   function ownPlay() {
     if (permitted) permitted.add(this);
-    return realPlay.apply(this, arguments);
+    return apply(realPlay, this, arguments);
   }
-  try { Object.defineProperty(window, KEY, { value: ownPlay, writable: false, enumerable: false, configurable: false }); } catch (e) { return; }
+  function hand(key) { return key === PLAY ? ownPlay : null; }
+  try { Object.defineProperty(window, GUARD, { value: hand, writable: false, enumerable: false, configurable: false }); } catch (e) { return; }
   function getter(name) { var d = Object.getOwnPropertyDescriptor(proto, name); return d && d.get; }
   var gMuted = getter('muted'), gVolume = getter('volume'), gPaused = getter('paused');
   var srcObject = getter('srcObject');
@@ -61,6 +68,7 @@ export function autoplayGuardScript(nonce: string, browserActivation = Platform.
   var P = window.Promise;
   var DOMEx = window.DOMException;
   var mainFrame = window.top === window;
+  var stopNow = window.Event && window.Event.prototype.stopImmediatePropagation;
   var touched = false;
   var told = false;
   function activated() {
@@ -70,12 +78,12 @@ export function autoplayGuardScript(nonce: string, browserActivation = Platform.
     return false;
   }
   function stream(el) {
-    try { var s = srcObject && srcObject.call(el); return !!(s && MS && s instanceof MS); } catch (e) { return false; }
+    try { var s = srcObject && apply(srcObject, el, []); return !!(s && MS && s instanceof MS); } catch (e) { return false; }
   }
   function mayStart(el) {
     if (permitted && permitted.has(el)) return true;
     var muted = true, volume = 0;
-    try { muted = gMuted.call(el); volume = gVolume.call(el); } catch (e) { return true; }
+    try { muted = apply(gMuted, el, []); volume = apply(gVolume, el, []); } catch (e) { return true; }
     return qutaiMayStart(muted, volume, stream(el), activated());
   }
   function refused() {
@@ -86,7 +94,7 @@ export function autoplayGuardScript(nonce: string, browserActivation = Platform.
     Object.defineProperty(proto, 'play', {
       value: function play() {
         if (!mayStart(this)) return P.reject(refused());
-        return realPlay.apply(this, arguments);
+        return apply(realPlay, this, arguments);
       },
       writable: true, configurable: true,
     });
@@ -95,8 +103,8 @@ export function autoplayGuardScript(nonce: string, browserActivation = Platform.
   function check(e) {
     var el = e.target;
     if (!(el instanceof ME)) return;
-    try { if (gPaused.call(el) || mayStart(el)) return; } catch (err) { return; }
-    try { realPause.call(el); } catch (err) {}
+    try { if (apply(gPaused, el, []) || mayStart(el)) return; } catch (err) { return; }
+    try { apply(realPause, el, []); } catch (err) {}
   }
   document.addEventListener('play', check, true);
   document.addEventListener('playing', check, true);
@@ -110,10 +118,10 @@ export function autoplayGuardScript(nonce: string, browserActivation = Platform.
     var suspend = C.prototype.suspend, resume = C.prototype.resume;
     if (typeof suspend !== 'function' || typeof resume !== 'function') return;
     function Wrapped() {
-      var ctx = new (Function.prototype.bind.apply(C, [null].concat([].slice.call(arguments))))();
+      var ctx = construct(C, arguments);
       if (!activated()) {
         held[held.length] = { ctx: ctx, resume: resume };
-        try { var p = suspend.call(ctx); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+        try { var p = apply(suspend, ctx, []); if (p && p.catch) p.catch(function () {}); } catch (e) {}
       }
       return ctx;
     }
@@ -128,7 +136,7 @@ export function autoplayGuardScript(nonce: string, browserActivation = Platform.
             held[held.length] = { ctx: ctx, resume: resume };
             return P.resolve();
           }
-          return resume.apply(this, arguments);
+          return apply(resume, this, arguments);
         },
         writable: true, configurable: true,
       });
@@ -142,13 +150,13 @@ export function autoplayGuardScript(nonce: string, browserActivation = Platform.
     var list = held;
     held = [];
     for (var i = 0; i < list.length; i++) {
-      try { var p = list[i].resume.call(list[i].ctx); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+      try { var p = apply(list[i].resume, list[i].ctx, []); if (p && p.catch) p.catch(function () {}); } catch (e) {}
     }
   }
   // Tells the frames inside (and theirs) that the user touched the page around them.
   function tellFrames(win) {
     for (var i = 0; i < win.length; i++) {
-      try { win[i].postMessage({ __qutaiAutoplay: NONCE }, '*'); } catch (e) {}
+      try { win[i].postMessage({ __qutaiAutoplay: FRAMES }, '*'); } catch (e) {}
       try { tellFrames(win[i]); } catch (e) {}
     }
   }
@@ -163,15 +171,17 @@ export function autoplayGuardScript(nonce: string, browserActivation = Platform.
   });
   window.addEventListener('message', function (e) {
     var d = e.data;
-    if (!d || typeof d !== 'object' || d.__qutaiAutoplay !== NONCE) return;
+    if (!d || typeof d !== 'object' || d.__qutaiAutoplay !== FRAMES) return;
+    // The page's own listeners (added after this one) never see the message.
+    try { apply(stopNow, e, []); } catch (err) {}
     if (d.ask && activated() && e.source) {
-      try { e.source.postMessage({ __qutaiAutoplay: NONCE }, '*'); } catch (err) {}
+      try { e.source.postMessage({ __qutaiAutoplay: FRAMES }, '*'); } catch (err) {}
       return;
     }
     if (!d.ask && !mainFrame && !told) { told = true; release(); }
   }, true);
   // A frame loaded after the touch asks the main frame.
-  if (!mainFrame) { try { window.top.postMessage({ __qutaiAutoplay: NONCE, ask: true }, '*'); } catch (e) {} }
+  if (!mainFrame) { try { window.top.postMessage({ __qutaiAutoplay: FRAMES, ask: true }, '*'); } catch (e) {} }
 })();
 `;
 }

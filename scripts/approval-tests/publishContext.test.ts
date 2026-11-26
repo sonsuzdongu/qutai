@@ -159,6 +159,8 @@ function setup(facts: { press?: PressFacts | null; enter?: FieldFacts | null; fi
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     enter: (args: Record<string, unknown>) => enterGate(args, ctx as any, tab as any),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    enterHidden: (args: Record<string, unknown>) => enterGate(args, ctx as any, tab as any, true),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     approve: (args: Record<string, unknown>) => requestApprovalTool(args, ctx as any, tab as any),
   };
 }
@@ -207,4 +209,33 @@ test('Enter in a search box or a short word goes through without asking', async 
   assert.deepEqual(await search.enter({ ref: 4, text: 'how to fold a fitted sheet', submit: true }), { kind: 'none' });
   const short = setup({ enter: input() });
   assert.deepEqual(await short.enter({ ref: 4, text: 'ok', submit: true }), { kind: 'none' });
+});
+
+test('a hidden saved value is never sent with Enter from a field for free text, approved field or not (PAY-30)', async () => {
+  // A comment box, a chat line: refused, whatever the value is (the gate never sees it) and without using an approval.
+  for (const facts of [field({ ref: 23, text: '' }), input({ ref: 23, text: '' }), field({ ref: 23, tag: 'div', editable: true, text: '' })]) {
+    const s = setup({ enter: facts });
+    const gate = await s.enterHidden({ ref: 23, memory: 'm1', submit: true });
+    assert.equal(gate.kind, 'refuse', facts.tag);
+    assert.match(out(gate).content, /Nothing was typed\. A hidden saved value is never sent with Enter/);
+  }
+  // An approval for Enter in that field was for the text the user saw, not for a hidden value.
+  const s = setup({ enter: input({ ref: 23, text: '' }), fieldText: 'Running ten minutes late, sorry' });
+  await s.approve({ kind: 'publish', action: 'message', field_ref: 23, text: 'Running ten minutes late, sorry', button_ref: 23 });
+  assert.equal((await s.enterHidden({ ref: 23, memory: 'm1', submit: true })).kind, 'refuse');
+  assert.deepEqual(await s.enter({ ref: 23, text: 'Running ten minutes late, sorry', submit: true }), { kind: 'approved' }, 'the approval is still there');
+});
+
+test("a hidden saved value with Enter in a form's own field goes on: an ID field, a search, a short field", async () => {
+  for (const facts of [
+    input({ ref: 9, hints: 'tc kimlik no', maxLength: 11, text: '' }),
+    input({ ref: 9, inSearch: true, text: '' }),
+    input({ ref: 9, type: 'tel', text: '' }),
+    input({ ref: 9, autocomplete: 'name', text: '' }),
+  ]) {
+    const s = setup({ enter: facts });
+    assert.deepEqual(await s.enterHidden({ ref: 9, memory: 'm1', submit: true }), { kind: 'none' }, JSON.stringify(facts));
+  }
+  // No text field at the ref: type itself fails.
+  assert.deepEqual(await setup({ enter: null }).enterHidden({ ref: 9, memory: 'm1', submit: true }), { kind: 'none' });
 });

@@ -2,7 +2,7 @@ import type { Tab } from '../../browser/Tab';
 import { t } from '../../i18n';
 import { errorNotice, pageErrorNotice } from '../stepLine';
 import { sleep } from '../../utils/sleep';
-import { type PageSnapshot, normalizeUrl, noteOpened, tabList } from './shared';
+import { type PageSnapshot, blockedSite, normalizeUrl, noteOpened, tabList } from './shared';
 import { formatPage } from './page';
 import type { ToolContext, ToolOutput } from '../executeTool';
 
@@ -76,7 +76,7 @@ export async function tabsTool(name: string, input: Record<string, unknown>, ctx
         if (tab && browser.activeId === tab.id) await tab.captureThumbnail();
         ctx.agentTab.id = target.id;
         browser.switchTab(target.id);
-        return { content: `Switched to tab id=${target.id} (${target.url}).`, isError: false };
+        return { content: `Switched to tab id=${target.id} (${blockedSite(ctx, target.url) ?? target.url}).`, isError: false };
       }
       case 'close_tab': {
         const id = String(input.tab_id);

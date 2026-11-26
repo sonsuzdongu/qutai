@@ -438,7 +438,7 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
     if (hidden && target) {
       const out = await hiddenGate(hidden.memory, input, target.url, host, ctx, target.tab);
       if (out.kind === 'refuse') return record({ content: out.reason, isError: true, notice: out.notice });
-      personalAsked = true;
+      personalAsked = out.kind === 'asked';
     } else if (host) {
       const out = await personalGate(name, input, host, ctx, target?.tab);
       if (out.kind === 'refuse') return record({ content: out.reason, isError: true, notice: out.notice });
@@ -452,8 +452,8 @@ async function executeUnredacted(name: string, input: Record<string, unknown>, c
   if (gate('press') && page) {
     const out =
       name === 'type'
-        ? input.submit === true && !hidden
-          ? await enterGate(input, ctx, page)
+        ? input.submit === true
+          ? await enterGate(input, ctx, page, !!hidden)
           : null
         : await pressGate(name as 'click' | 'click_at', input, ctx, page, clickAtPoint(name, input, page));
     if (out?.kind === 'refuse') return record(out.output);

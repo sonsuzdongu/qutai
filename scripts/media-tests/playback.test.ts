@@ -73,6 +73,7 @@ function page(os: 'ios' | 'android' = 'ios', incognito = false) {
   const win = new Target() as Target & Record<string, unknown>;
   Object.assign(win, {
     HTMLMediaElement,
+    Reflect,
     HTMLVideoElement,
     Navigator,
     ReactNativeWebView: { postMessage: (s: string) => posted.push(JSON.parse(s)) },

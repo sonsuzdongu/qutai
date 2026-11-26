@@ -53,6 +53,7 @@ function page(opts: { active?: boolean; top?: boolean; hasShare?: boolean } = {}
     Promise,
     DOMException,
     ReactNativeWebView: { postMessage: (m: string) => posted.push(m) },
+    Reflect,
   };
   win.top = opts.top === false ? {} : win;
   new Function('window', 'document', 'URL', 'JSON', 'Object', 'String', 'TypeError', 'Error', webShareScript(N))(

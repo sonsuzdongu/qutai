@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 874 decisions (137 owner, 655 default, 82 waiting); 163 ids moved to Details.
+Totals: 881 decisions (137 owner, 662 default, 82 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -184,6 +184,7 @@ Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `
 | `DATA-31` | Site icons requested only from the site being visited (or its icon server), no cookies or Referer, weekly; no icon service; policy sentence proposed, not edited | Default | 2026-11-25 |
 | `DATA-32` | Backups carry "Don't ask again", sites' own script settings, background tasks and their notification, Gemini streaming, cost, action marker, voice languages, custom endpoint images; old backups keep the phone's values; checked like the loader | Owner | 2026-11-25 |
 | `DATA-33` | iOS/iPadOS/Mac tabs end their User-Agent like Safari on that device, with the system's Safari version; desktop-site mode uses the real Safari/Chrome versions; never a Qutai string. | Owner | 2026-11-25 |
+| `DATA-34` | Android's User-Agent comes from the system's WebView in one fixed form; a page can't write into it (older builds: only a slightly newer version, once per run). | Default | 2026-11-26 |
 
 ## [4. Page content is untrusted](04-untrusted-content.md)
 
@@ -245,6 +246,7 @@ Moved to Details (ids retired, not reused): `UNTR-3`
 | `SITE-25` | One URL module, read as the WebView reads addresses, for every site decision and every host shown; site key (host) vs registrable domain defined there | Default | 2026-11-20 |
 | `SITE-26` | A site setting changed while the stored ones load wins over disk, for every kind, also back to the default | Default | 2026-11-21 |
 | `SITE-27` | The site's settings show "Posting without asking" and "Scripts without asking" with "Ask every time again"; the list shows them and ✕ resets them; only their dialogs turn them on | Default | 2026-11-23 |
+| `SITE-28` | A tab on a Blocked site is listed for the assistant by its site only: no title, no address. | Default | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `SITE-2`, `SITE-3`, `SITE-18`, `SITE-24`
 
@@ -293,6 +295,7 @@ Moved to Details (ids retired, not reused): `SITE-2`, `SITE-3`, `SITE-18`, `SITE
 | `PAY-27` | A button with an amount and a billing period or subscribe word in its visible text is a payment press (pay approval and the payments setting) | Default | 2026-11-20 |
 | `PAY-28` | Every in-app check before a press, typing or an approval fails closed: no answer, an error or a wrong-shaped answer from the page refuses the step | Default | 2026-11-20 |
 | `PAY-29` | The publish dialog's box "Post on {site} without asking" (off) skips the dialog there later; text match, re-check and one-press grant stay; not pay/change, incognito, Read only, Blocked, background or backups | Owner | 2026-11-23 |
+| `PAY-30` | A hidden saved value is never sent with Enter from a field for free text; an approval for that field's Enter is for the shown text only. | Default | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `PAY-10`, `PAY-18`, `PAY-19`, `PAY-20`, `PAY-21`, `PAY-22`
 
@@ -319,7 +322,7 @@ Moved to Details (ids retired, not reused): `PAY-10`, `PAY-18`, `PAY-19`, `PAY-2
 | `INC-18` | Nothing arriving from outside the app opens in an incognito tab, except the explicit… | Default |  |
 | `INC-19` | Picture-in-picture is not offered for incognito tabs or while the app lock is on; the media notification… | Default |  |
 | `INC-20` | Styles and scripts are never kept from an incognito tab and kept scripts never run there; kept styles and… | Default |  |
-| `INC-21` | A download from an incognito tab is listed only while the incognito session lasts and uses the incognito… | Default |  |
+| `INC-21` | A download from an incognito tab is listed only while the incognito session lasts and uses the incognito… iOS: the file goes too (`INC-31`). | Default | 2026-11-26 |
 | `INC-22` | A certificate exception made in an incognito tab belongs to that tab and goes with it. | Default |  |
 | `INC-23` | Online speech recognition (Apple's or Google's service) is never used in incognito conversations. | Default |  |
 | `INC-24` | A notification the assistant scheduled carries only a random in-memory key for an incognito tab, so an… | Default |  |
@@ -329,6 +332,7 @@ Moved to Details (ids retired, not reused): `PAY-10`, `PAY-18`, `PAY-19`, `PAY-2
 | `INC-28` | With the app lock on, things arriving from other apps wait until the user unlocks. | Default |  |
 | `INC-29` | Incognito conversations load no card pictures until "Show images" | Default (owner to confirm) | 2026-11-20 |
 | `INC-30` | Incognito leftovers: failed removals recorded and retried, the sent-log purge waits for writes on their way, unknown state counts as incognito | Default | 2026-11-21 |
+| `INC-31` | iOS: an incognito download's file is deleted when the session ends (nothing else can reach it); files no list entry points to are swept at start. Android keeps the file. | Default | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `INC-8`
 
@@ -389,6 +393,7 @@ Moved to Details (ids retired, not reused): `BLK-5`, `BLK-8`, `BLK-9`, `BLK-10`,
 | `WPERM-18` | Page copy buttons use the WebViews' own clipboard rules (write after a tap; no-tap writes and page reads refused, iOS reads only via WebKit's Paste button); no bridge needed | Default | 2026-11-25 |
 | `WPERM-19` | Payment Request / Google Pay / Apple Pay never hang: Android has no PaymentRequest, Google Pay opens its pop-up; iOS Apple Pay rejects at once (scripts injected) | Default | 2026-11-25 |
 | `WPERM-20` | "Allow developer tools": Safari's Web Inspector / Chrome's DevTools may see Qutai's tabs; on by default on a Mac only, never incognito tabs on iOS, not in backups, not in the settings tool; steps shown under it. | Owner | 2026-11-25 |
+| `WPERM-21` | The camera, location, share, playback and autoplay scripts call kept functions directly (Reflect.apply), never through Function.prototype.call/.apply a page can replace. | Default | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `WPERM-8`, `WPERM-11`
 
@@ -540,6 +545,7 @@ Moved to Details (ids retired, not reused): `TABS-3`, `TABS-4`, `TABS-5`, `TABS-
 | `TOOL-31` | A tool's uncaught error is that call's error result (only Stop throws); a cut-off Anthropic tool call gets an empty input | Default | 2026-11-21 |
 | `TOOL-32` | "Ask before actions" is read at every tool call; a change during a task applies from its next step | Default | 2026-11-21 |
 | `TOOL-33` | `open_settings` `default_browser` is Android only; on iOS it refuses and opens nothing; profile id changed. | Owner | 2026-11-21 |
+| `TOOL-34` | Only a hidden-value question just answered skips the action confirmation; later uses of the grant are confirmed like any action. | Default | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `TOOL-4`, `TOOL-18`, `TOOL-28`
 
@@ -792,7 +798,7 @@ Moved to Details (ids retired, not reused): `DL-12`
 | `MEDIA-18` | The download pill's close button, a sideways swipe or the screen reader's "Hide" action hide it without… | Default |  |
 | `MEDIA-19` | "Open" on a download never fails silently: a file deleted elsewhere, no app for its type, lost access or a… | Default |  |
 | `MEDIA-20` | On Android an APK opens in the system installer, which asks "allow from this source" itself; Qutai… | **Waiting** |  |
-| `MEDIA-23` | Incognito downloads are listed only while the incognito session lasts and never written down; unfinished… | Default |  |
+| `MEDIA-23` | Incognito downloads are listed only while the incognito session lasts and never written down; unfinished… iOS: files deleted with the session (`INC-31`). | Default | 2026-11-26 |
 | `MEDIA-24` | Downloads always go to the Downloads folder (Android) or Qutai's Downloads (iOS); there is no "Ask where… | Default |  |
 | `MEDIA-25` | A page gets the camera or microphone only for the site in the address bar (main frame of exactly that… | Default |  |
 | `MEDIA-26` | Each site has ask / allow / block per kind; "Allow once" lasts for the page; incognito tabs keep a stored… | Default |  |
@@ -800,6 +806,7 @@ Moved to Details (ids retired, not reused): `DL-12`
 | `MEDIA-28` | Capture is paused while another tab is shown or Qutai is in the background; revoking reloads the page. | Default |  |
 | `MEDIA-29` | "Let sites play videos with sound automatically", off by default: sound waits for a touch, muted autoplay plays (page script in every frame) | Default | 2026-11-24 |
 | `MEDIA-30` | Android: a wide full-screen video turns to landscape (sensor, also with auto-rotate off) and back on exit; iOS's own player already rotates | Default | 2026-11-24 |
+| `MEDIA-31` | A tab's playback nonce is never in a frame message or a name on `window`; frames use a one-way frame key and the real play() needs the play key. | Default | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `MEDIA-1`, `MEDIA-8`, `MEDIA-9`, `MEDIA-13`, `MEDIA-16`, `MEDIA-21`, `MEDIA-22`
 

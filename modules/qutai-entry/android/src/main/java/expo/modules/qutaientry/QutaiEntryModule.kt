@@ -57,6 +57,15 @@ class QutaiEntryModule : Module() {
       AppLanguage.set(context, tag)
     }
 
+    /**
+     * The system WebView's own User-Agent, read from the system and never from a page (src/browser/userAgent.ts,
+     * DATA-34); "" when the WebView can't say.
+     */
+    AsyncFunction("webViewUserAgent") {
+      val context = appContext.reactContext?.applicationContext ?: return@AsyncFunction ""
+      try { android.webkit.WebSettings.getDefaultUserAgent(context) ?: "" } catch (_: Exception) { "" }
+    }
+
     /** Everything that arrived since the last call, oldest first; each item is returned once. */
     Function("takePending") {
       // The launch intent: read here because the activity may not exist yet when the module is created.

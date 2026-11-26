@@ -53,6 +53,10 @@ export function geolocationScript(nonce: string): string {
   return `(function () {
   if (window.__qutaiGeoInstalled || !navigator.geolocation) return;
   Object.defineProperty(window, '__qutaiGeoInstalled', { value: true });
+  // Called directly, never through Function.prototype.call / .apply: a page can replace those and read what passes
+  // through them (the nonce in a message to the app), or make a call do nothing.
+  var apply = window.Reflect && window.Reflect.apply;
+  if (typeof apply !== 'function') return;
   var NONCE = ${JSON.stringify(nonce)};
   var stringify = JSON.stringify;
   var bridge = window.ReactNativeWebView;
@@ -79,7 +83,7 @@ export function geolocationScript(nonce: string): string {
   function send(payload) {
     payload.__qutaiGeo = NONCE;
     payload.origin = location.origin;
-    try { post.call(bridge, stringify(payload)); return true; } catch (e) { return false; }
+    try { apply(post, bridge, [stringify(payload)]); return true; } catch (e) { return false; }
   }
   function later(fn) { setTimeout(fn, 0); }
   function deny(error) {
@@ -124,7 +128,7 @@ export function geolocationScript(nonce: string): string {
     var query = permProto.query;
     var pendingStates = {};
     permProto.query = function (descriptor) {
-      if (!descriptor || descriptor.name !== 'geolocation') return query.apply(this, arguments);
+      if (!descriptor || descriptor.name !== 'geolocation') return apply(query, this, arguments);
       return new Promise(function (resolve) {
         function status(state) {
           return {

@@ -23,6 +23,7 @@ import { agentCommandScript, agentInstallScript, MISSING_REPLY, newAgentName } f
 import { type PageSignals, parsePageSignals, samePageSignals } from './pageKind';
 import { pageKey, READER_MIN_CHARS, READER_MIN_PARAGRAPHS, type ReaderArticle } from './reader';
 import { startsLoading } from './loadState';
+import { derivedKey } from './pageKeys';
 import { NavigationTracker, shownAddress } from './pendingNavigation';
 import { crashPage, PAGE_GONE_ERROR, type ProcessEnd, processGoneAction } from './crashPolicy';
 import { newId, newNonce } from '../utils/ids';
@@ -1089,7 +1090,7 @@ export class Tab {
    */
   private async runInBackground<T>(command: PageCommand, args: unknown[], timeoutMs: number): Promise<T> {
     if (!this.webview || this.asleep || this.isNewTab) throw new NeedsForegroundError();
-    const box = JSON.stringify(`__qutaiReplies_${this.nonce}`);
+    const box = JSON.stringify(`__qutaiReplies_${derivedKey(this.nonce, 'replies')}`);
     const send = async (install: boolean) => {
       const id = `${this.nonce}-${++this.counter}`;
       const code =

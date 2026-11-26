@@ -7,6 +7,7 @@ import { parseDataUrl } from '../device/saveImage';
 import { Db } from './db';
 import { stripDevice } from '../device/macDevice';
 import type { DownloadBackend, DownloadItem, OpenResult, PageWriter, SaveResult, StartRequest } from './downloads';
+import { leftoverNames } from './downloadLeftovers';
 import { offersSaveCopy, openSteps } from './openFileSteps';
 import { reportStorageFailure } from './failures';
 import { newId } from '../utils/ids';
@@ -106,8 +107,8 @@ function base64ToBytes(base64: string): Uint8Array {
  * iOS: downloads into Qutai's own Downloads folder (Files › On My iPhone isn't used: the screen shares or saves them).
  * The page fetches a file first, with the site's cookies, so downloads behind a login work; larger files (or when the
  * page can't) are downloaded directly with progress. Cancel only: expo-file-system's download has no resume, so
- * there is no pause on iOS. Finished downloads are kept in the database (incognito ones only in memory), failed ones
- * stay in the list (memory) until removed.
+ * there is no pause on iOS. Finished downloads are kept in the database (incognito ones only in memory, and their
+ * files go when the incognito session ends), failed ones stay in the list (memory) until removed.
  */
 export class IosDownloads implements DownloadBackend {
   readonly canPause = false;
@@ -130,6 +131,7 @@ export class IosDownloads implements DownloadBackend {
           (a, b) => b.createdAt - a.createdAt,
         );
         this.emit();
+        this.sweep();
       })
       .catch((e) => {
         // The Downloads screen would look empty: told, and tried again next time.
@@ -349,12 +351,40 @@ export class IosDownloads implements DownloadBackend {
     for (const item of [...this.items]) await this.deleteFile(item.id);
   }
 
+  /**
+   * The incognito session ended: its downloads leave the list and, on iOS, their files go too. They live in Qutai's
+   * own folder, where nothing but the list can reach them, so a kept file would be one the user can never open or
+   * delete (INC-31; Android keeps the file, which is in the phone's Downloads folder).
+   */
   forgetIncognito() {
     for (const item of this.items.filter((i) => i.incognito)) {
       if (item.state === 'downloading') this.cancel(item.id);
+      else if (item.uri) this.deleteQuietly(new File(item.uri));
     }
     this.items = this.items.filter((i) => !i.incognito);
     this.emit();
+  }
+
+  /** A failed removal is left to the next start's sweep. */
+  private deleteQuietly(file: File) {
+    try {
+      if (file.exists) file.delete();
+    } catch (e) {
+      reportStorageFailure('downloads.leftover', e, 'record');
+    }
+  }
+
+  /** Removes files in the folder that no entry points to (downloadLeftovers.ts); runs once the saved list is read. */
+  private sweep() {
+    try {
+      const files = downloadsDir()
+        .list()
+        .filter((entry): entry is File => entry instanceof File);
+      const leftover = new Set(leftoverNames(files.map((f) => f.name), this.items));
+      for (const file of files) if (leftover.has(file.name)) this.deleteQuietly(file);
+    } catch (e) {
+      reportStorageFailure('downloads.leftover', e, 'record');
+    }
   }
 
   /** iPhone: the share sheet. iPad: Quick Look. Mac: the Mac's app for the type, else Quick Look (DL-19). */

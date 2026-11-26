@@ -4,6 +4,7 @@ import { t } from '../../i18n';
 import { uiLabel, uiPath } from '../uiLabels';
 import { errorNotice } from '../stepLine';
 import { sleep } from '../../utils/sleep';
+import { siteKey } from '../../utils/webUrl';
 import { HiddenNeedle, hiddenNeedles } from '../hiddenValues';
 import { withScheme } from '../toolTable';
 import type { ToolContext, ToolOutput } from '../executeTool';
@@ -103,7 +104,9 @@ export function noteOpened(ctx: ToolContext, tabId: string) {
 /**
  * The open tabs for the model. In a normal conversation an incognito tab is listed without its title and address
  * (INC-2: nothing of an incognito tab is written to disk or the sent log); reading or switching to it makes the
- * conversation incognito first.
+ * conversation incognito first. A tab on a site the user set to Blocked is listed by its site only: its title is the
+ * page's own text and its address may say what the user is doing there, and Qutai reads nothing of a Blocked site
+ * (SITE-4, SITE-28).
  */
 export function tabList(ctx: ToolContext): string {
   const opened = openedByTask.get(ctx.agentTab);
@@ -124,10 +127,20 @@ export function tabList(ctx: ToolContext): string {
         ? 'new tab page (no web page)'
         : t.incognito && !incognitoChat
           ? '(title and address not shown in a normal conversation; read_tab or switch_tab makes it incognito)'
-          : `"${t.title || '(no title)'}" ${t.url}`;
+          : (blockedSite(ctx, t.url) ?? `"${t.title || '(no title)'}" ${t.url}`);
       return `- id=${t.id} ${page}${marks ? ` (${marks})` : ''}`;
     })
     .join('\n');
+}
+
+/**
+ * What the model is told instead of a tab's title and address when the user set its site to Blocked; null for any
+ * other tab.
+ */
+export function blockedSite(ctx: ToolContext, url: string): string | null {
+  const host = siteKey(url);
+  if (!host || ctx.sites?.levelFor(host) !== 'blocked') return null;
+  return `${host} (the user blocked Qutai on this site: its title and address are not shown, and it can't be read or used)`;
 }
 
 /** The conversation already involves incognito tabs (its agent's tab is one, or it touched one). */

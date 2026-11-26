@@ -65,6 +65,8 @@ function page(browserActivation = false) {
   const win = new Target() as Target & Record<string, unknown>;
   Object.assign(win, {
     HTMLMediaElement,
+    Reflect,
+    Event: class { stopImmediatePropagation(this: { stopped?: boolean }) { this.stopped = true; } },
     MediaStream,
     AudioContext,
     Promise,
@@ -159,4 +161,64 @@ test('Web Audio starts suspended and resumes at the first touch', async () => {
   assert.equal(ctx.state, 'suspended');
   p.touch();
   assert.equal(ctx.state, 'running');
+});
+
+// The page shares one JavaScript world with these scripts: nothing it can read may carry a tab's nonce, and nothing
+// they do may pass through a function the page can replace (MEDIA-31, WPERM-21).
+const { mediaCaptureScript } = await import('../../src/browser/mediaCapture.ts');
+const { geolocationScript } = await import('../../src/browser/geolocation.ts');
+const { webShareScript } = await import('../../src/browser/webShare.ts');
+const { derivedKey } = await import('../../src/browser/pageKeys.ts');
+
+const NONCE = 'n'.repeat(32);
+const SCRIPTS: Record<string, string> = {
+  autoplay: autoplayGuardScript(NONCE, true),
+  playback: playbackScript(NONCE, false, 'Private tab'),
+  mediaCapture: mediaCaptureScript(NONCE),
+  geolocation: geolocationScript(NONCE),
+  webShare: webShareScript(NONCE),
+};
+
+test('no bridge script calls through Function.prototype.call or .apply', () => {
+  for (const [name, source] of Object.entries(SCRIPTS)) {
+    const found = source.match(/[\w)\]]\.(call|apply)\(/g);
+    assert.equal(found, null, `${name}: ${found?.join(' ')}`);
+    assert.match(source, /var apply = window\.Reflect && window\.Reflect\.apply;/, name);
+  }
+});
+
+test("no name on window carries the tab's nonce, and the real play() needs the tab's play key", () => {
+  const p = page();
+  const names = [...Object.getOwnPropertyNames(p.win), ...Object.keys(p.win)];
+  assert.deepEqual(names.filter((n) => n.includes(NONCE)), []);
+  const guard = p.win.__qutaiAutoplayGuard as (key: string) => unknown;
+  assert.equal(guard('guess'), null);
+  assert.equal(guard(NONCE), null, 'the nonce itself is not the key');
+  assert.equal(typeof guard(derivedKey(NONCE, 'play')), 'function');
+  assert.ok(!SCRIPTS.webShare.includes(`__qutaiShareDone_${NONCE}`));
+});
+
+test("messages between frames carry the frame key, never the nonce, and the autoplay guard doesn't hold the nonce", () => {
+  assert.ok(!SCRIPTS.autoplay.includes(NONCE));
+  const frameKey = derivedKey(NONCE, 'frames');
+  assert.notEqual(frameKey, NONCE);
+  assert.ok(!frameKey.includes(NONCE) && !NONCE.includes(frameKey));
+  for (const name of ['autoplay', 'playback']) {
+    // Every window-to-window message: `<window>.postMessage({ … }, '*')`.
+    const sends = SCRIPTS[name].match(/\.postMessage\(\{[^}]*\}, '\*'\)/g) ?? [];
+    assert.ok(sends.length > 0, name);
+    for (const send of sends) assert.ok(/: FRAMES[ ,]/.test(send) && !/NONCE/.test(send), `${name}: ${send}`);
+  }
+});
+
+test("a frame's message is hidden from the page's own listeners", () => {
+  const p = page();
+  const own: { stopped?: boolean } & Record<string, unknown> = { data: { __qutaiAutoplay: derivedKey(NONCE, 'frames'), ask: true }, source: null };
+  const other: { stopped?: boolean } & Record<string, unknown> = { data: { __qutaiAutoplay: NONCE }, source: null };
+  const seen: (boolean | undefined)[] = [];
+  for (const e of [own, other]) {
+    for (const fn of p.win.listeners.get('message') ?? []) fn(e);
+    seen.push(e.stopped === true);
+  }
+  assert.deepEqual(seen, [true, false]);
 });

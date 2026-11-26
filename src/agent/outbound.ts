@@ -95,13 +95,23 @@ export class OutboundGuard {
 /** The registrable domain of a web address ("shop.example.com.tr" → "example.com.tr"), or null (utils/webUrl.ts). */
 export const siteOf = registrableSite;
 
-/** The user named the site: its domain, or its name (the label before the suffix, 3+ letters), as a word they wrote. */
+/**
+ * The user named the site: its domain, or its name (the label before the suffix, 3+ letters), as a word they wrote.
+ * The domain counts only as a whole one: alone, or as the end of a host ("www.trendyol.com"). Inside another name
+ * it is a different site ("trendyol.com" doesn't name yol.com, "yol.com.tr" doesn't name yol.com).
+ */
 export function namedByUser(site: string, texts: string[]): boolean {
   const all = texts.join('\n').toLowerCase();
-  if (all.includes(site)) return true;
+  const domain = site.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // Before it: the text's start, a dot of its own host, or anything that can't be part of a host. After it: not a
+  // letter, digit or hyphen, and not a dot that goes on into another label.
+  if (new RegExp(`(^|[^\\p{L}\\p{N}-])${domain}(?![\\p{L}\\p{N}-]|\\.[\\p{L}\\p{N}])`, 'u').test(all)) return true;
   const name = foldText(site.split('.')[0]);
   if (name.length < 3) return false;
-  return ` ${foldText(all)} `.includes(` ${name} `);
+  // The name as a word of its own: the labels of other domains the user wrote ("hepsi-burada.com", "yol.com.tr") are
+  // not loose words.
+  const words = all.replace(/[\p{L}\p{N}-]+(?:\.[\p{L}\p{N}-]+)+/gu, ' ');
+  return ` ${foldText(words)} `.includes(` ${name} `);
 }
 
 /**

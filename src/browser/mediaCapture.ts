@@ -77,6 +77,10 @@ export function mediaCaptureScript(nonce: string): string {
   return `(function () {
   if (window.__qutaiMediaInstalled) return;
   Object.defineProperty(window, '__qutaiMediaInstalled', { value: true });
+  // Called directly, never through Function.prototype.call / .apply: a page can replace those and read what passes
+  // through them (the nonce in a message to the app), or make a call do nothing.
+  var apply = window.Reflect && window.Reflect.apply;
+  if (typeof apply !== 'function') return;
   var NONCE = ${JSON.stringify(nonce)};
   var stringify = JSON.stringify;
   var bridge = window.ReactNativeWebView;
@@ -103,7 +107,7 @@ export function mediaCaptureScript(nonce: string): string {
   function send(payload) {
     payload.__qutaiMedia = NONCE;
     payload.origin = location.origin;
-    try { post.call(bridge, stringify(payload)); return true; } catch (e) { return false; }
+    try { apply(post, bridge, [stringify(payload)]); return true; } catch (e) { return false; }
   }
   function held(track) {
     for (var i = 0; i < tracks.length; i++) if (tracks[i] === track) return true;
@@ -124,8 +128,8 @@ export function mediaCaptureScript(nonce: string): string {
     send({ type: 'active', camera: camera, microphone: microphone });
   }
   function pauseTrack(track) {
-    if (!enabled || !enabled.get.call(track)) return;
-    enabled.set.call(track, false);
+    if (!enabled || !apply(enabled.get, track, [])) return;
+    apply(enabled.set, track, [false]);
     pausedTracks[pausedTracks.length] = track;
   }
   function setPaused(on) {
@@ -137,7 +141,7 @@ export function mediaCaptureScript(nonce: string): string {
       for (i = 0; i < tracks.length; i++) pauseTrack(tracks[i]);
     } else {
       for (i = 0; i < pausedTracks.length; i++) {
-        if (pausedTracks[i].readyState !== 'ended') enabled.set.call(pausedTracks[i], true);
+        if (pausedTracks[i].readyState !== 'ended') apply(enabled.set, pausedTracks[i], [true]);
       }
       pausedTracks = [];
     }
@@ -154,7 +158,7 @@ export function mediaCaptureScript(nonce: string): string {
     var camera = !!c.video;
     var microphone = !!c.audio;
     // Nothing asked for: the real function throws the right TypeError.
-    if (!camera && !microphone) return realGetUserMedia.call(target, constraints);
+    if (!camera && !microphone) return apply(realGetUserMedia, target, [constraints]);
     if (!mainFrame || !post) return refuse();
     return new Promise(function (resolve, reject) {
       var id = nextId++;
@@ -162,7 +166,7 @@ export function mediaCaptureScript(nonce: string): string {
         if (answer.kind !== 'go') return reject(notAllowed());
         if (answer.paused) setPaused(true);
         function attempt(retry) {
-          realGetUserMedia.call(target, constraints).then(function (stream) {
+          apply(realGetUserMedia, target, [constraints]).then(function (stream) {
             var list = stream.getTracks();
             for (var i = 0; i < list.length; i++) hold(list[i]);
             send({ type: 'done', id: id });
@@ -189,7 +193,7 @@ export function mediaCaptureScript(nonce: string): string {
     ['getUserMedia', 'webkitGetUserMedia'].forEach(function (name) {
       if (!(name in navigator)) return;
       lock(navigator, name, function (constraints, onSuccess, onError) {
-        gate.call(devices, constraints).then(onSuccess, function (e) { if (typeof onError === 'function') onError(e); });
+        apply(gate, devices, [constraints]).then(onSuccess, function (e) { if (typeof onError === 'function') onError(e); });
       });
     });
   }
@@ -197,11 +201,11 @@ export function mediaCaptureScript(nonce: string): string {
   if (devices) lock(devices, 'getDisplayMedia', refuse);
   if (Track && realStop && realClone) {
     lock(Track.prototype, 'stop', function () {
-      realStop.call(this);
+      apply(realStop, this, []);
       if (held(this)) report();
     });
     lock(Track.prototype, 'clone', function () {
-      var copy = realClone.call(this);
+      var copy = apply(realClone, this, []);
       if (held(this)) { hold(copy); report(); }
       return copy;
     });
@@ -212,7 +216,7 @@ export function mediaCaptureScript(nonce: string): string {
     var query = permProto.query;
     permProto.query = function (descriptor) {
       var name = descriptor && descriptor.name;
-      if (name !== 'camera' && name !== 'microphone') return query.apply(this, arguments);
+      if (name !== 'camera' && name !== 'microphone') return apply(query, this, arguments);
       return new Promise(function (resolve) {
         function status(state) {
           return {
@@ -240,7 +244,7 @@ export function mediaCaptureScript(nonce: string): string {
       } else if (msg.kind === 'pause') {
         setPaused(!!msg.on);
       } else if (msg.kind === 'stop') {
-        for (var i = 0; i < tracks.length; i++) realStop.call(tracks[i]);
+        for (var i = 0; i < tracks.length; i++) apply(realStop, tracks[i], []);
         report();
       }
     }

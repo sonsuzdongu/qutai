@@ -1003,3 +1003,36 @@ Mağazaya gönderilecek derlemede, gönderimden önce bir kez denenecekler ([sto
 - [ ] "Gezinme verilerini temizle" normalde eskisi gibi bitiyor (`DATA-30`; hata metni yalnızca silme başarısız olursa
       çıkar, elle denemek zor).
 - [ ] Kredi satın alma (sandbox) eskisi gibi tamamlanıyor ve kredi ekleniyor (`BUY-35`).
+
+## 33. Güvenlik paketi (26 Kasım kod incelemesi; **yeni yerel derleme gerekir** (Android, `DATA-34`); telefonda denenmedi)
+
+- [ ] **Android, User-Agent (`DATA-34`):** yeni derlemede bir "what is my user agent" sayfası açın: dizgi
+      `Mozilla/5.0 (Linux; Android 10; K) … Chrome/<sürüm>.0.0.0 Mobile Safari/537.36` biçiminde, içinde `wv`,
+      `Version/4.0` ya da telefon modeli yok; sürüm, telefondaki Android System WebView sürümüyle aynı.
+- [ ] Android: Google ile giriş ve Gmail "desteklenmeyen tarayıcı" demeden açılıyor (eskisi gibi).
+- [ ] Android tablet: dizgide `Mobile` yok.
+- [ ] **Sesli otomatik oynatma (`MEDIA-29`, `MEDIA-31`):** ayar kapalıyken sesli video dokunmadan başlamıyor,
+      dokununca başlıyor; içinde gömülü oynatıcı (iframe) olan bir sayfada da (YouTube gömülü bir haber sayfası) aynı.
+- [ ] Kilit ekranı ve bildirimdeki oynat / duraklat / ileri-geri düğmeleri çalışıyor (iOS ve Android); arka planda ses
+      sürüyor, PiP açılıyor (Android).
+- [ ] iOS: gömülü oynatıcıda (iframe) çalan ses kilit ekranında görünüyor; ses durunca sekme uykuya geçebiliyor.
+- [ ] **Kamera, mikrofon, konum (`WPERM-21`):** bir görüntülü görüşme sitesinde (ör. meet.jit.si) izin sorusu çıkıyor,
+      "İzin ver" sonrası kamera çalışıyor, adres çubuğundaki gösterge yanıyor; uygulamadan çıkınca kamera duruyor,
+      dönünce sürüyor. Bir harita sitesinde "Konumumu kullan" çalışıyor.
+- [ ] Android: bir sitenin kendi "Paylaş" düğmesi sistem paylaşım sayfasını açıyor (`WPERM-15`).
+- [ ] Android, arka planda görev: uygulama arka plandayken süren bir görev sayfayı okuyup devam ediyor (`TASK`).
+- [ ] **iOS, gizli sekme indirmesi (`INC-31`):** gizli sekmede bir dosya indirin, İndirilenler'de açın ya da paylaşın;
+      bütün gizli sekmeleri kapatın: kayıt listeden gidiyor. iPhone Depolama'da Qutai'nin "Belgeler ve Veriler" boyutu
+      dosya kadar azalıyor. Normal sekmede indirilen dosya yerinde duruyor ve açılıyor.
+- [ ] iOS: güncellemeden sonra ilk açılışta İndirilenler listesindeki eski dosyaların hepsi açılıyor (süpürme
+      listedeki hiçbir dosyayı silmiyor).
+- [ ] **Gizli değer + Enter (`PAY-30`):** hafızada gizli bir değer (ör. pasaport numarası) varken asistandan onu bir
+      yorum kutusuna yazıp göndermesini isteyin: yazmıyor, nedenini söylüyor. Bir formun kimlik numarası alanına
+      yazması istenince soru çıkıyor ve yazıyor.
+- [ ] "Her işlemden önce sor" açıkken aynı gizli değerin aynı sitede ikinci kez yazılması için onay soruluyor
+      (`TOOL-34`).
+- [ ] **Engelli site sekmesi (`SITE-28`):** bir siteyi "Engelli" yapın, o sitede bir sekme açık kalsın; başka bir
+      sekmede asistana "açık sekmelerimi listele" deyin: o sekmenin başlığını ve adresini söylemiyor, yalnızca siteyi
+      ve engelli olduğunu söylüyor.
+- [ ] **Adres kontrolü (`UNTR-22`):** "trendyol.com'dan sipariş 1234567'yi takip et" deyince Trendyol adresi sorusuz
+      açılıyor (eskisi gibi).
