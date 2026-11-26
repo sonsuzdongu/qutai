@@ -325,13 +325,14 @@ export function fromChatResponse(res: unknown): ChatResult {
   };
 }
 
-function parseArguments(raw: string): Record<string, unknown> {
+/** A tool call's arguments; null when the text is not JSON, i.e. the reply was cut off in the middle of the call. */
+function parseArguments(raw: string): Record<string, unknown> | null {
   if (!raw.trim()) return {};
   try {
     const parsed = JSON.parse(raw);
     return isObj(parsed) ? parsed : {};
   } catch {
-    return {};
+    return null;
   }
 }
 
@@ -342,11 +343,14 @@ function parseArguments(raw: string): Record<string, unknown> {
 export function toChatReply(result: ChatResult, provider: ProviderId = 'custom'): ModelReply {
   const { message, finishReason } = result;
   if (finishReason === 'error') throw new ChatStreamError('The provider reported an error');
-  const toolCalls: ToolCall[] = (message.tool_calls ?? []).map((c) => ({
-    id: c.id,
-    name: c.function.name,
-    input: parseArguments(c.function.arguments),
-  }));
+  // Half a call's arguments means the reply was cut off (a length limit the server didn't report, a stream that broke
+  // without an error): no call of that reply is run with empty input; runAgent answers each "Not executed".
+  let cutOff = false;
+  const toolCalls: ToolCall[] = (message.tool_calls ?? []).map((c) => {
+    const input = parseArguments(c.function.arguments);
+    if (!input) cutOff = true;
+    return { id: c.id, name: c.function.name, input: input ?? {} };
+  });
   const citations: Citation[] = [];
   for (const a of message.annotations ?? []) {
     if (a.type !== 'url_citation') continue;
@@ -355,7 +359,7 @@ export function toChatReply(result: ChatResult, provider: ProviderId = 'custom')
     if (typeof c.url === 'string') citations.push({ url: c.url, title: typeof c.title === 'string' ? c.title : '' });
   }
   let stop: StopReason = toolCalls.length > 0 ? 'tool_use' : 'end';
-  if (finishReason === 'length') stop = 'max_tokens';
+  if (finishReason === 'length' || cutOff) stop = 'max_tokens';
   if (finishReason === 'content_filter' || message.refusal) stop = 'refusal';
   const raw: RawChatMessage = {
     role: 'assistant',

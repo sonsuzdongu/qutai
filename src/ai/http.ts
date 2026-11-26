@@ -5,6 +5,7 @@ import { sleep } from '../utils/sleep';
 import { wellFormedJson } from '../utils/wellFormed';
 import { classifyFailure, type FailureKind, serverMessage } from './serverError';
 import { createSseDecoder, type SseEvent } from './sse';
+import { readOrStall, StreamStalledError } from './stall';
 
 const MAX_RETRIES = 3;
 
@@ -142,7 +143,7 @@ export async function postJson<T>(
 /**
  * POSTs a streaming request and hands each server-sent event to onEvent as it arrives.
  * Retries like postJson, but only until the first event: after that, a retry would
- * repeat text the user has already seen.
+ * repeat text the user has already seen. A stream with no data for ten minutes ends with a timeout (stall.ts).
  */
 export async function postSse(
   url: string,
@@ -159,7 +160,7 @@ export async function postSse(
     let received = false;
     try {
       for (;;) {
-        const { done, value } = await reader.read();
+        const { done, value } = await readOrStall(reader);
         if (done) break;
         for (const event of decoder.push(value)) {
           received = true;
@@ -169,7 +170,8 @@ export async function postSse(
       decoder.end().forEach(onEvent);
       return;
     } catch (e) {
-      if (signal.aborted || received || attempt >= MAX_RETRIES) throw e;
+      // A silent stream is not repeated: the provider may still be working on (and billing) the first request.
+      if (signal.aborted || received || attempt >= MAX_RETRIES || e instanceof StreamStalledError) throw e;
       await waitForForeground(signal);
       await sleep(1000 * 2 ** attempt, signal);
     }

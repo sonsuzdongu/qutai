@@ -4,7 +4,7 @@ Part of [Qutai: how it works and the decisions behind it](../../DESIGN.md)
 
 Every decision, one row per id, grouped by area; the area file has the reason, where it is enforced and the source. "Waiting" rows are open questions for the owner (details in [TODO.md](../../TODO.md)). Ids moved to an area's Details are listed after its table: they are retired and never reused.
 
-Totals: 882 decisions (137 owner, 663 default, 82 waiting); 163 ids moved to Details.
+Totals: 884 decisions (138 owner, 664 default, 82 waiting); 163 ids moved to Details.
 
 ## Waiting for the owner
 
@@ -144,6 +144,7 @@ Moved to Details (ids retired, not reused): `PROD-5`
 | `AI-34` | Own-key requests retry after 1, 2, 4 s or a longer Retry-After (20 s at most); Stop ends the wait at once | Default | 2026-11-21 |
 | `AI-35` | In pro mode Qutai Credits is listed first among the providers. | Owner | 2026-11-22 |
 | `AI-36` | Sending with no AI set up says "choose an AI provider in Settings" and names no provider. | Owner | 2026-11-23 |
+| `AI-37` | A streamed answer that doesn't end properly is not an answer: Anthropic without its stop reason is an error, half a tool call's arguments runs no tool, ten minutes of silence is a timeout. | Default | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `AI-3`, `AI-20`, `AI-23`, `AI-10`, `AI-11`, `AI-12`
 
@@ -928,19 +929,19 @@ Moved to Details (ids retired, not reused): `LANG-4`, `LANG-11`, `LANG-12`, `LAN
 | `UI-68` | The slow-site line floats over the page at 90 % opacity next to the address bar; the page never moves for it. | Owner | 2026-11-24 |
 | `UI-69` | JSON and other plain-text pages use the scheme's colours, readable in dark theme. | Owner | 2026-11-24 |
 | `UI-70` | The new tab page refreshes when history is deleted; "Recently visited" opens and closes, kept on the phone. | Owner | 2026-11-25 |
-| `UI-71` | History has a select mode: choose visits, "Select all" on screen, delete them at once; a search keeps only the chosen ones still shown. | Owner | 2026-11-25 |
+| `UI-71` | History has a select mode: choose visits, "Select all" on screen, delete them at once; a search keeps only the chosen ones still shown; deleting all loaded rows loads the older ones. | Owner | 2026-11-26 |
 | `UI-72` | New tab page shows sites' own icons kept from visits (https, no cookies, ≤ 200 KB, PNG/JPEG/GIF/WebP/ICO, weekly), on a light tile; cache folder only; gone with history or cached files | Default | 2026-11-25 |
 | `UI-73` | On a Mac or an iPad the address bar starts at the top (bottom on phones, by device type); a stored or restored choice is never changed. | Owner | 2026-11-25 |
 | `UI-74` | Mac and iPad only (never phones or Android): a tab strip right above the address bar, top or bottom, in windows ≥ 700 pt, setting on by default: current kind's tabs, icon, title, ×, +, group labels that fold. | Owner | 2026-11-25 |
 | `UI-75` | The working light has rounded corners on phones, square on Mac and iPad. | Owner | 2026-11-25 |
-| `UI-76` | Mac and iPad keyboard shortcuts: ⌘T, ⌘⇧N, ⌘W, ⌘⇧T, ⌘R, ⌘L, ⌘F, ⌘[ ⌘], ⌘1…9, ⌃Tab/⌃⇧Tab, ⌘+ ⌘− ⌘0 (`UI-84`), ⌘E (`UI-89`); text editing keys never taken; ⌘L/⌘F/⌘R stay Qutai's in page fields. | Owner | 2026-11-25 |
+| `UI-76` | Mac and iPad keyboard shortcuts: ⌘T, ⌘⇧N, ⌘W, ⌘⇧T, ⌘R, ⌘L, ⌘F, ⌘[ ⌘], ⌘1…9, ⌃Tab/⌃⇧Tab, ⌘+ ⌘− ⌘0 (`UI-84`), ⌘E (`UI-89`); text editing keys never taken; ⌘L/⌘F/⌘R stay Qutai's in page fields; nothing behind a dialog, menu or sheet. | Owner | 2026-11-26 |
 | `UI-77` | Mac only: no iPad-style input bar under focused page or mini-app fields, and the layout ignores the reported keyboard; iPad and iPhone unchanged. | Owner | 2026-11-25 |
 | `UI-78` | "Clear history" sits above the History list, always reachable. | Owner | 2026-11-25 |
 | `UI-79` | Mac only: no phantom top/bottom safe-area insets (status bar, home indicator), so content starts right under the title bar; iPhone and iPad unchanged. | Owner | 2026-11-25 |
 | `UI-80` | Address suggestions show only once something is typed; no empty box or Paste and go row. | Owner | 2026-11-25 |
 | `UI-81` | Mac and iPad: ⌥Space is the Qutai button's push-to-talk (listens only while held, release sends; the microphone starts after 300 ms held, quicker presses do nothing; focus loss cancels), only where the button's hold would listen; the Mac's Qutai button tour mentions it. | Owner | 2026-11-25 |
 | `UI-82` | Address bar: history and the search engine are asked only after a 350 ms pause in typing. | Owner | 2026-11-25 |
-| `UI-83` | A new blank tab opens with the cursor in the address bar (not at launch or behind the incognito lock). | Owner | 2026-11-26 |
+| `UI-83` | A new blank tab opens with the cursor in the address bar (not at launch or behind the incognito lock); a search link's text stays in it. | Owner | 2026-11-26 |
 | `UI-84` | Page zoom (through the page's viewport width, not WKWebView.pageZoom): a Mac starts pages at 1.299 (macOS draws iPad apps at 77%) so they match Safari; ⌘+ / ⌘− / ⌘0 in Safari's steps (50–300%), remembered per site; on a Mac the menu's Text size is Zoom (that per-site level); iPad text size = page zoom, iPhone text-size-adjust; 100% = Safari's size. | Owner | 2026-11-26 |
 | `UI-85` | Mac and iPad only: a reload button right of the address field (dimmed on the new tab page); phones keep ⋮ › Reload and pull to refresh. | Owner | 2026-11-26 |
 | `UI-86` | Mac and iPad: ⌘W only closes the tab (system File › Close removed from the menu bar); ⌘Q quits without asking (no supported way to confirm). | Owner | 2026-11-26 |
@@ -1200,7 +1201,7 @@ Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 | `BUY-33` | A pro IPA needs the RevenueCat iOS key (or --without-purchases), like a pro AAB. | Owner | 2026-11-21 |
 | `BUY-34` | The buy screen and the rating message name only the phone's own store (or none); ten languages. | Owner | 2026-11-21 |
 | `BUY-35` | The kept list of uncredited purchases is never written over when it couldn't be read; unsaved changes stay in memory | Default | 2026-11-21 |
-| `BUY-36` | The missing-credits check asks about all kept purchases at once, once each, no waits; no waiting count on the screen. | Owner | 2026-11-24 |
+| `BUY-36` | The missing-credits check asks about all kept purchases at once, once each, no waits; no waiting count on the screen; a failed check says so, store prices have "Try again". | Owner | 2026-11-26 |
 | `BUY-37` | A pack's credits are changed in the admin panel (Credits…, whole credits 1–1,000,000, both stores, audited); only purchases recorded after the save get it. | Owner | 2026-11-25 |
 | `BUY-38` | A purchase recorded without an owner is given to the buyer whose report proves it, and credited once. | Default | 2026-11-26 |
 
@@ -1381,7 +1382,7 @@ Moved to Details (ids retired, not reused): `LEGAL-16`, `LEGAL-17`
 | `WEB-6` | The site's privacy policy is the app's own store-build text, never edited on the site. After the app's… | Default |  |
 | `WEB-7` | The sign-in link page never uses up the one-time token, signs nothing in, removes the token from the… | Default |  |
 | `WEB-8` | Demo videos are real recordings made on brand-free demo sites, under written honesty rules. Qutai is… | Default |  |
-| `WEB-9` | The brand line and page title are "Qutai: Agentic Browser". The site always uses the light parchment look… | Default |  |
+| `WEB-9` | The brand line and page title are "Qutai: Agentic AI Browser". The site always uses the light parchment look… | Owner | 2026-11-26 |
 | `WEB-11` | Today three sentences on the site are out of date: "No account needed and no sync", the planned end-to-end… | **Waiting** |  |
 | `WEB-12` | The features page describes only what the code does today, from the design record, with limits stated… | Default |  |
 | `WEB-13` | The site has an account deletion page (`/en/delete-account/`, `/tr/delete-account/`, and `/delete-account`… | Owner | 2026-11-21 |
@@ -1389,6 +1390,7 @@ Moved to Details (ids retired, not reused): `LEGAL-16`, `LEGAL-17`
 | `WEB-15` | The site has a pricing page (`/en/pricing/`, `/tr/pricing/`, `/pricing` redirects): own key free, Qutai Credits packs 100 / 550 / 1,200 for $1 / $5 / $10… | Owner | 2026-11-26 |
 | `WEB-16` | The home page leads with the agent (knows you, fills in forms, shops, books, researches); tab comparison and PDFs are not headline features… | Owner | 2026-11-26 |
 | `WEB-17` | SEO and GEO: an agentic-browser guide with FAQ data, a Qutai vs … page per competitor from the table, `/llms.txt`, offers in JSON-LD… | Owner | 2026-11-26 |
+| `WEB-18` | The reviewers' videos under `/review/` are served noindex: reachable by link, not in search results. | Default | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `WEB-3`, `WEB-10`
 

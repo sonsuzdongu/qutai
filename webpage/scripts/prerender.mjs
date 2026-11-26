@@ -575,7 +575,8 @@ ${LANGS.map((l) => `  <url>\n    <loc>${supportUrl(l)}</loc>\n${LANGS.map((x) =>
 );
 
 // Static responses only (the Worker sets its own headers on the redirect). The CSP allows nothing but this
-// origin, which is how "no third-party requests" is enforced rather than just promised.
+// origin, which is how "no third-party requests" is enforced rather than just promised. The videos under /review/
+// are for the stores' reviewers, who get their links: reachable, but kept out of search results.
 await writeFile(
   `${client}_headers`,
   `/*
@@ -587,6 +588,9 @@ await writeFile(
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+
+/review/*
+  X-Robots-Tag: noindex, nofollow
 `,
 );
 

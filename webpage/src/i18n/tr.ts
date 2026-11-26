@@ -5,10 +5,10 @@ import type { Messages } from './en';
  * "app:" ile işaretlenenler uygulamanın kendi arayüz metinleri (uygulamada src/i18n/tr.ts).
  */
 export const tr: Messages = {
-  'meta.title': 'Qutai: Agentic Browser',
+  'meta.title': 'Qutai: Agentic AI Browser',
   'meta.description':
     'Qutai, telefonunuzun tarayıcısındaki yapay zekâ asistanı: iPhone, iPad, Apple silicon işlemcili Mac ve Android için açık kaynak bir tarayıcı. Asistanı sizi tanır ve sayfadaki işi sizin yerinize yapar: form doldurur, alışverişinizi ve rezervasyonlarınızı halleder, araştırır. Qutai Kredileriyle ya da kendi AI anahtarınızla çalışır; verileriniz telefonunuzda kalır, önemli bir adımdan önce size sorar. Google Play’de; App Store’da beta testinde.',
-  'meta.ogAlt': 'Mavi Q harfinden oluşan Qutai logosu ve yanında: Qutai, Agentic Browser.',
+  'meta.ogAlt': 'Mavi Q harfinden oluşan Qutai logosu ve yanında: Qutai, Agentic AI Browser.',
   'meta.appDescription':
     'iPhone, iPad, Apple silicon işlemcili Mac ve Android için açık kaynak, yapay zekâ asistanlı bir tarayıcı: asistan sizi tanır; form doldurur, alışverişinizi ve rezervasyonlarınızı halleder, sizin için araştırır. Qutai Kredileriyle ya da kendi AI anahtarınızla çalışır.',
 
@@ -323,7 +323,7 @@ export const tr: Messages = {
   'status.planned.4': 'iPhone’da paylaşım uzantısı ve widget',
   'status.planned.5': 'Uygulamalar için: konum, bildirim ve kamera gibi telefon özellikleri, seçtiğiniz sitelere internet, ana ekran kısayolu',
 
-  'footer.tagline': 'Agentic Browser',
+  'footer.tagline': 'Agentic AI Browser',
   'footer.privacy':
     'Bu site başka sunuculara istek göndermez, çerez de kullanmaz; yalnızca dili değiştirirseniz seçiminizi hatırlamak için bir çerez bırakır.',
   'footer.trademarks': 'Google Play ve Google Play logosu Google LLC’nin ticari markalarıdır. Apple, iPhone, iPad, Mac, App Store ve TestFlight Apple Inc.’in ticari markalarıdır.',

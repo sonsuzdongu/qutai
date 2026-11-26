@@ -204,6 +204,9 @@ async function streamMessage(
         throw new Error(e.error?.message ?? 'Stream error');
     }
   });
+  // Every complete message ends with message_delta's stop reason. A stream that closes without it was cut on the
+  // way: it is an error, not an answer that happens to stop mid-sentence (or a tool call with half its input).
+  if (!stopReason) throw new Error('The response ended unexpectedly');
   return { content: content.filter(Boolean), stop_reason: stopReason, usage };
 }
 

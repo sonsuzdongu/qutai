@@ -120,9 +120,11 @@ function isFinal(e: unknown): boolean {
 }
 
 /** The stream failed in a way that a request without streaming may not: worth one repeat. */
-function streamFailed(e: unknown): boolean {
+export function streamFailed(e: unknown): boolean {
   if (e instanceof GeminiStreamError) return e.problem !== 'blocked';
-  return e instanceof ApiError;
+  // A refusal that has nothing to do with streaming (the key, the quota, the rate limit, a server error http.ts has
+  // already retried) would be refused again, and a second request may be billed: only a rejected request is repeated.
+  return e instanceof ApiError && [400, 404, 405, 415, 422].includes(e.status);
 }
 
 /**

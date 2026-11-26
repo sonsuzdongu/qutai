@@ -221,9 +221,25 @@ function HistoryList({ query, onOpen, backRef }: { query: string; onOpen: (url: 
     }
   };
 
+  /**
+   * Takes deleted visits off the list. When that empties what is loaded while older visits remain, the next page is
+   * loaded at once: an empty list must mean there is no history, not that the loaded rows are gone.
+   */
+  const dropRows = async (gone: ReadonlySet<number>) => {
+    const left = entries.filter((e) => !gone.has(e.id));
+    if (left.length > 0 || done) {
+      setResult((prev) => ({ ...prev, entries: prev.entries.filter((e) => !gone.has(e.id)) }));
+      return;
+    }
+    const page = await listHistory(await getDb(), { query, limit: PAGE_SIZE });
+    setResult((prev) =>
+      prev.loadedQuery === query ? { loadedQuery: query, entries: page, done: page.length < PAGE_SIZE } : prev,
+    );
+  };
+
   const remove = async (entry: HistoryEntry) => {
     await deleteHistoryEntry(await getDb(), entry.id);
-    setResult((prev) => ({ ...prev, entries: prev.entries.filter((e) => e.id !== entry.id) }));
+    await dropRows(new Set([entry.id]));
   };
 
   const deleteSelected = () => {
@@ -238,8 +254,7 @@ function HistoryList({ query, onOpen, backRef }: { query: string; onOpen: (url: 
           setDeleting(true);
           try {
             await deleteHistoryEntries(await getDb(), ids);
-            const gone = new Set(ids);
-            setResult((prev) => ({ ...prev, entries: prev.entries.filter((e) => !gone.has(e.id)) }));
+            await dropRows(new Set(ids));
             success();
             endSelecting();
           } catch (e) {

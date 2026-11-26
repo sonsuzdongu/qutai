@@ -32,6 +32,9 @@ export function openBuyCredits() {
   emit();
 }
 
+/** Whether the buy-credits screen is in front: keyboard shortcuts leave the page behind it alone (UI-76). */
+export const isBuyCreditsOpen = () => open;
+
 function closeBuyCredits() {
   open = false;
   emit();
@@ -109,6 +112,8 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
   const suspended = account.status === 'signedIn' && account.user.status === 'suspended';
   const [products, setProducts] = useState<StoreProduct[] | null>(null);
   const [productsFailed, setProductsFailed] = useState(false);
+  /** Counts the taps on "Try again" under the store's failed prices: each one asks the store again. */
+  const [productsTry, setProductsTry] = useState(0);
   /** The device can't pay through its store at all (Play Store missing or billing unavailable). */
   const [billingOff, setBillingOff] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
@@ -152,7 +157,7 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
     return () => {
       live = false;
     };
-  }, [store, userId, productKey]);
+  }, [store, userId, productKey, productsTry]);
 
   /** What reporting the waiting purchases says (quiet: only when credits were added). */
   const lateStatus = (r: { credited: number; waiting: number }, quiet: boolean): Status | null =>
@@ -189,6 +194,9 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
     try {
       const r = await flow.retryPending(userId);
       setStatus(lateStatus(r, false));
+    } catch {
+      // The store or the server couldn't be asked: said, so the tap never ends in silence.
+      setStatus({ tone: 'warn', icon: 'insecure', text: t('buy.status.network') });
     } finally {
       await creditsStore.refreshCredits().catch(() => {});
       setChecking(false);
@@ -276,7 +284,19 @@ function BuyCreditsScreen({ onClose }: { onClose: () => void }) {
         {!signedIn && <Text style={styles.notice}>{t('buy.signIn')}</Text>}
         {suspended && <Text style={[styles.notice, styles.warnText]}>{t('buy.suspended')}</Text>}
         {store.unavailable && <Text style={styles.notice}>{t(UNAVAILABLE[store.unavailable])}</Text>}
-        {productsFailed && <Text style={styles.notice}>{t('buy.storeFailed')}</Text>}
+        {productsFailed && (
+          <Pressable
+            onPress={() => {
+              setProductsFailed(false);
+              setProductsTry((n) => n + 1);
+            }}
+            accessibilityRole="button"
+          >
+            <Text style={styles.notice}>
+              {t('buy.storeFailed')} <Text style={styles.link}>{t('credits.retry')}</Text>
+            </Text>
+          </Pressable>
+        )}
         {billingOff && <Text style={styles.notice}>{t(Platform.OS === 'ios' ? 'buy.billingUnavailableIos' : 'buy.billingUnavailable')}</Text>}
 
         <Text style={styles.section} accessibilityRole="header">

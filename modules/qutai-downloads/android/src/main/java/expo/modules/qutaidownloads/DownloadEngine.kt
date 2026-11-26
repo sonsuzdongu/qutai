@@ -12,6 +12,7 @@ import android.util.Log
 import android.webkit.CookieManager
 import com.reactnativecommunity.webview.RNCWebViewProfiles
 import okhttp3.Call
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -21,7 +22,6 @@ import java.io.File
 import java.io.IOException
 import java.io.InterruptedIOException
 import java.io.OutputStream
-import java.net.URI
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
@@ -568,9 +568,10 @@ object DownloadEngine {
     var referrer = worker.rec.referrer
     val cookies = cookieManager(worker.rec)
     repeat(MAX_REDIRECTS + 1) {
-      val scheme = URI(url).scheme?.lowercase(Locale.ROOT)
-      if (scheme != "http" && scheme != "https") throw Fatal("unsupported")
-      val builder = Request.Builder().url(url).get()
+      // Read as a browser reads an address (OkHttp's HttpUrl), not java.net.URI: that one refuses "|", "[" or a space
+      // in a path or query, which real download links carry, and the download ended as "the file couldn't be saved".
+      val target = url.toHttpUrlOrNull() ?: throw Fatal("unsupported")
+      val builder = Request.Builder().url(target).get()
         // Bytes as the server stores them, so lengths and ranges match the file.
         .header("Accept-Encoding", "identity")
       worker.rec.userAgent?.let { builder.header("User-Agent", it) }
@@ -590,7 +591,7 @@ object DownloadEngine {
         res.close()
         if (location.isNullOrBlank()) throw Fatal("http:${res.code}")
         referrer = url
-        url = URI(url).resolve(location).toString()
+        url = target.resolve(location)?.toString() ?: throw Fatal("unsupported")
         return@repeat
       }
       return res
@@ -602,11 +603,11 @@ object DownloadEngine {
   private fun referrerFor(referrer: String?, target: String): String? {
     if (referrer.isNullOrBlank()) return null
     return try {
-      val from = URI(referrer)
-      val to = URI(target)
+      val from = referrer.toHttpUrlOrNull() ?: return null
+      val to = target.toHttpUrlOrNull() ?: return null
       if (from.scheme == "https" && to.scheme == "http") return null
       if (from.scheme == to.scheme && from.host == to.host && from.port == to.port) referrer.substringBefore('#')
-      else "${from.scheme}://${from.rawAuthority}/"
+      else from.resolve("/")?.newBuilder()?.username("")?.password("")?.build()?.toString()
     } catch (_: Exception) {
       null
     }

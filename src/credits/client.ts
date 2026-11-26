@@ -1,4 +1,5 @@
 import { createSseDecoder, type SseEvent } from '../ai/sse';
+import { readOrStall, StreamStalledError } from '../ai/stall';
 import type { DeviceProof } from '../account/deviceProof';
 import { RelayError, type RelayErrorKind } from './errors';
 import { TIER_ID } from './tiers';
@@ -285,13 +286,15 @@ export function createCreditsClient(options: CreditsClientOptions) {
     };
     try {
       for (;;) {
-        const { done, value } = await reader.read();
+        const { done, value } = await readOrStall(reader);
         if (done) break;
         for (const event of decoder.push(value)) handle(event);
       }
       decoder.end().forEach(handle);
     } catch (e) {
       if (signal.aborted) throw e;
+      // Nothing arrived for ten minutes (ai/stall.ts): the read was given up, the server settles what it charged.
+      if (e instanceof StreamStalledError) throw new RelayError('timeout', 0);
       // The connection to the server broke: what was charged is settled on the server; the balance is re-read.
       throw new RelayError('stream_lost', 0);
     }

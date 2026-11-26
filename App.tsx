@@ -69,7 +69,7 @@ import { accountSession, useAccountState } from './src/account';
 import { lostQutaiAccount } from './src/credits/gate';
 import type { ProviderId } from './src/ai/types';
 import { reportPendingPurchases } from './src/purchases';
-import { BuyCreditsHost, openBuyCredits } from './src/components/BuyCredits';
+import { BuyCreditsHost, isBuyCreditsOpen, openBuyCredits } from './src/components/BuyCredits';
 import { askCreditsDisclosure } from './src/components/CreditsDisclosure';
 import { ensureAiConsent } from './src/components/AiConsent';
 import { getProvider, isConfigured } from './src/ai/providers';
@@ -137,7 +137,7 @@ import { Toast, useToast } from './src/components/Toast';
 import { DownloadIndicator } from './src/components/DownloadIndicator';
 import { openDownload } from './src/components/openDownload';
 import { CaptureOverlay } from './src/components/CaptureOverlay';
-import { dialog, DialogHost } from './src/components/Dialog';
+import { dialog, dialogState, DialogHost } from './src/components/Dialog';
 import { BarLayout } from './src/components/BarLayout';
 import { useKeyboardVisible } from './src/utils/useKeyboardVisible';
 import { copyLink, copyText, shareLink, shareText } from './src/device/link';
@@ -912,6 +912,8 @@ function BrowserApp({
   /** Opens the address field of the tab on screen with `text` in it (not submitted). */
   const [addressEdit, setAddressEdit] = useState<{ id: number; text: string } | null>(null);
   const clearAddressEdit = useCallback(() => setAddressEdit(null), []);
+  /** The tab the "new tab comes to the front" effect below last saw (UI-83). */
+  const lastActiveId = useRef(browser.active.id);
   const handleEntry = (entry: Entry) => {
     switch (entry.kind) {
       case 'open':
@@ -925,7 +927,10 @@ function BrowserApp({
         setIncoming({ text: entry.text, url: entry.url });
         return;
       case 'newTab': {
-        browser.openTab(undefined, { incognito: entry.incognito });
+        const opened = browser.openTab(undefined, { incognito: entry.incognito });
+        // This tab's address field is filled here: the effect that empties a new tab's field (UI-83) would otherwise
+        // run right after and drop the text of a qutai://search link.
+        lastActiveId.current = opened.id;
         setPanelOpen(false);
         // Not behind the incognito lock: the keyboard would come up over the lock screen.
         if (!entry.incognito || !settings.incognitoLock || incognitoUnlocked) {
@@ -1411,7 +1416,6 @@ function BrowserApp({
   const onNewTab = tab.isNewTab;
   // A blank new tab coming to the front (⋮ › New tab, the tab switcher's or the strip's +, ⌘T, closing the last tab)
   // opens with the cursor in the address bar, ready to type (UI-83). Not at launch, and not behind the incognito lock.
-  const lastActiveId = useRef(tab.id);
   useEffect(() => {
     if (lastActiveId.current === tab.id) return;
     lastActiveId.current = tab.id;
@@ -2214,6 +2218,23 @@ function BrowserApp({
     if (id === 'voiceUp') return onVoiceKey('up');
     if (id === 'voiceCancel') return onVoiceKey('blur');
     if (lock || screen) return;
+    // Nor behind a dialog, a menu or a sheet: ⌘W would close the tab under an open question (UI-76).
+    if (
+      dialogState.isOpen() ||
+      isBuyCreditsOpen() ||
+      menuVisible ||
+      textSizeVisible ||
+      readerSettingsVisible ||
+      modelSheetFor ||
+      permissionHost ||
+      qrUrl ||
+      context ||
+      chatLink ||
+      incoming ||
+      attachSheet ||
+      previewAttachment
+    )
+      return;
     switch (id) {
       case 'newTab':
         return openTabFromKeyboard(tab.incognito);

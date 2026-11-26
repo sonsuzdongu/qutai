@@ -4,10 +4,10 @@
  * so it shows the product as it is.
  */
 export const en = {
-  'meta.title': 'Qutai: Agentic Browser',
+  'meta.title': 'Qutai: Agentic AI Browser',
   'meta.description':
     'Qutai is the AI assistant in your phone’s browser: an open-source browser for iPhone, iPad, Mac with Apple silicon and Android whose assistant gets to know you and does the work on the page for you: it fills in forms, shops, books and researches, with Qutai Credits or your own AI key. Your data stays on your phone, and it asks before sensitive actions. On Google Play; in beta testing on the App Store.',
-  'meta.ogAlt': 'The Qutai logo, a blue Q, next to the words: Qutai, Agentic Browser.',
+  'meta.ogAlt': 'The Qutai logo, a blue Q, next to the words: Qutai, Agentic AI Browser.',
   'meta.appDescription':
     'An open-source AI browser for iPhone, iPad, Mac with Apple silicon and Android whose assistant gets to know you and fills in forms, shops, books and researches for you, with Qutai Credits or your own AI provider key.',
 
@@ -306,7 +306,7 @@ export const en = {
   'status.planned.4': 'Share extension and widget on iPhone',
   'status.planned.5': 'For apps: phone features such as location, notifications and the camera, internet for sites you choose, a home-screen shortcut',
 
-  'footer.tagline': 'Agentic Browser',
+  'footer.tagline': 'Agentic AI Browser',
   'footer.privacy':
     'This website makes no requests to other servers and sets no cookies, except one that remembers your language if you switch it.',
   'footer.trademarks': 'Google Play and the Google Play logo are trademarks of Google LLC. Apple, iPhone, iPad, Mac, App Store and TestFlight are trademarks of Apple Inc.',

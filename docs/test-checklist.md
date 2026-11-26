@@ -1036,3 +1036,27 @@ Mağazaya gönderilecek derlemede, gönderimden önce bir kez denenecekler ([sto
       ve engelli olduğunu söylüyor.
 - [ ] **Adres kontrolü (`UNTR-22`):** "trendyol.com'dan sipariş 1234567'yi takip et" deyince Trendyol adresi sorusuz
       açılıyor (eskisi gibi).
+
+## 34. Görünür hatalar (26 Kasım kod incelemesi; Android indirme düzeltmesi için **yeni yerel derleme gerekir**; telefonda denenmedi)
+
+- [ ] **Arama bağlantısı (`UI-83`):** Qutai açıkken ve kapalıyken `qutai://search?q=hava%20durumu` bağlantısını açın
+      (Kestirmeler › "URL'yi Aç" ya da `adb shell am start -a android.intent.action.VIEW -d "qutai://search?q=hava%20durumu"`):
+      yeni sekme açılıyor, adres alanında "hava durumu" yazılı ve gönderilmemiş. `qutai://new-tab` boş alanla açılıyor.
+- [ ] **Geçmiş (`UI-71`):** 60'tan fazla ziyaret varken "Seç" › "Tümünü seç" › "Sil": liste boş kalmıyor, daha eski
+      ziyaretler geliyor. Hepsi silinince "Geçmiş yok" görünüyor. Aynısı bir aramanın sonuçlarında da.
+- [ ] **Yarıda kesilen yanıt (`AI-37`):** asistan yanıt yazarken uçak modunu açın: yanıt "bitti" gibi kalmıyor, bağlantı
+      hatası gösteriliyor (Anthropic anahtarı ve Qutai Kredileri ile ayrı ayrı).
+- [ ] Uzun düşünen bir modelle (ör. araştırma) birkaç dakikalık sessizlik görevi kesmiyor.
+- [ ] **Gemini (`AI-13`):** "Gemini yanıtlarını akıt" açıkken geçersiz bir anahtarla soru sorun: hata bir kez
+      gösteriliyor (istek iki kez gitmiyor).
+- [ ] **Kredi kontrolü (`BUY-36`):** uçak modunda "Eksik kredileri kontrol et": "Mağazaya ulaşılamadı…" bildirimi
+      çıkıyor. Kredi satın al ekranı uçak modunda açılınca fiyat satırında "Tekrar deneyin" var; bağlantı gelince
+      dokunmak fiyatları getiriyor.
+- [ ] **Klavye kısayolları (`UI-76`, Mac ve iPad):** ⋮ menüsü, bir onay sorusu, yazı boyutu ya da model sayfası açıkken
+      ⌘W, ⌘T, ⌘R hiçbir şey yapmıyor; kapatınca yeniden çalışıyor. ⌥Space (konuşma) eskisi gibi.
+- [ ] **Android indirme (`DL-8`, yeni derleme):** adresinde `|`, `[` ya da boşluk olan bir dosya bağlantısı iniyor;
+      yönlendirmeli bir indirme (ör. GitHub sürüm dosyası) ve oturum gerektiren bir indirme eskisi gibi çalışıyor;
+      duraklat ve sürdür çalışıyor.
+- [ ] **Web sitesi (`WEB-18`, deploy sonrası):** `curl -I https://<site>/review/qutai-fgs-download.mp4` yanıtında
+      `X-Robots-Tag: noindex, nofollow` var; video bağlantıyla açılıyor.
+- [ ] iOS'ta temiz kurulumdan sonra (`npm install`) sesle yazma çalışıyor (konuşma tanıma yaması küçültüldü).

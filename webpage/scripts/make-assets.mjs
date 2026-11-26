@@ -25,8 +25,8 @@ await sharp(brand('icon.png')).resize(512, 512).png().toFile(out('icon-512.png')
 // Social preview images (1200×630), one per language. Keep the headline in step with meta.title and
 // footer.tagline in src/i18n.
 const og = {
-  en: ['Agentic Browser', 'Open source · On Google Play · App Store beta'],
-  tr: ['Agentic Browser', 'Açık kaynak · Google Play’de · App Store’da beta'],
+  en: ['Agentic AI Browser', 'Open source · On Google Play · App Store beta'],
+  tr: ['Agentic AI Browser', 'Açık kaynak · Google Play’de · App Store’da beta'],
 };
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
 for (const [lang, [headline, small]] of Object.entries(og)) {

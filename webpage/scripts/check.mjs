@@ -165,6 +165,7 @@ expect((await readFile(`${dist}sitemap.xml`, 'utf8')).includes('/vs/comet/') && 
   for (const [, path] of worker.matchAll(/url\.pathname === '(\/[a-z-]+)'/g))
     expect(wrangler.includes(`"${path}"`) && wrangler.includes(`"${path}/"`), `wrangler run_worker_first has ${path} and ${path}/`);
 }
+expect(/\/review\/\*\n\s+X-Robots-Tag: noindex/.test(await readFile(`${dist}_headers`, 'utf8').catch(() => '')), '_headers keeps /review/ out of search results');
 expect((await readFile(`${dist}llms.txt`, 'utf8').catch(() => '')).startsWith('# Qutai'), 'llms.txt');
 
 for (const f of ['robots.txt', 'sitemap.xml', '404.html', '_headers', 'og-en.png', 'og-tr.png', 'apple-touch-icon.png']) {
