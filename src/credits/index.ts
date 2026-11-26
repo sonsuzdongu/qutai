@@ -42,10 +42,13 @@ function getClient(): CreditsClient | null {
       beforeRetry: (signal) => waitForForeground(signal),
       deviceProof: deviceProof(),
     });
-    // Another account's balance must never show: forget it when the account changes.
-    let user: string | null = null;
+    // Another account's balance must never show: forget it when the account changes. The comparison starts from who
+    // is signed in now: starting from "nobody" made the first account news of a session that was already signed in
+    // (the Account page's fresh details) look like a change and wipe a balance that had just been read (CRED-52).
+    const userOf = (state: ReturnType<typeof session.getState>) => (state.status === 'signedIn' ? state.user.id : null);
+    let user: string | null = userOf(session.getState());
     session.subscribe((state) => {
-      const next = state.status === 'signedIn' ? state.user.id : null;
+      const next = userOf(state);
       if (next !== user) {
         creditsStore.forgetAccount();
         deviceProof()?.reset();

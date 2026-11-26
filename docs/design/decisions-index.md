@@ -1161,6 +1161,7 @@ Moved to Details (ids retired, not reused): `ACC-9`, `ACC-12`, `ACC-16`, `ACC-21
 | `CRED-49` | The free introduction runs on its own key and table: no credits, apart from paid usage, counted in the spend limit; own Usage section. | Owner | 2026-11-22 |
 | `CRED-50` | `POST /relay/organise-memory`: server-owned instructions, facts in, `{ moves }` out; paid like a relay step, usage `purpose` in the panel. | Owner | 2026-11-23 |
 | `CRED-51` | A reservation is a 60 s lease renewed every 20 s while the request runs (cap: longest request); a dead server's hold goes back within 60 s; the app waits up to 70 s on `task_active`. | Owner | 2026-11-26 |
+| `CRED-52` | The balance is forgotten only when the signed-in account really changes; fresh details for the same user never wipe it (the "Balance not known yet" row in Settings › Account). | Default | 2026-11-26 |
 
 Moved to Details (ids retired, not reused): `CRED-20`, `CRED-21`
 
