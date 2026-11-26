@@ -68,16 +68,18 @@ If the server's `MAIL_INTENT_PATH` is not the default, use that path in the AASA
 
 ## 3. Owner's steps
 
-1. Deploy the website with its variables (not committed):
-   `cd webpage && npx wrangler deploy --var APPLE_APP_IDS:<TEAM_ID>.<BUNDLE_ID> --var ANDROID_CERT_SHA256:<fp1>,<fp2>`
-   (or set them as plain-text variables of the Worker in the Cloudflare dashboard).
+1. Deploy the website with its variables (not committed): write `APPLE_APP_IDS=<TEAM_ID>.<BUNDLE_ID>` and
+   `ANDROID_CERT_SHA256=<fp1>,<fp2>` into `webpage/.deploy.local.env` (git-ignored) and run `cd webpage && npm run deploy`.
+   `webpage/scripts/deploy.mjs` passes them to `wrangler deploy` on every deploy; a plain `wrangler deploy` would
+   replace the Worker's variables with those in wrangler.jsonc and switch both files back to 404.
 2. Check both files: `curl -si https://<host>/.well-known/apple-app-site-association` and
    `curl -si https://<host>/.well-known/assetlinks.json` (200, `application/json`, no redirect). Google's checker:
    `https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://<host>&relation=delegate_permission/common.handle_all_urls`.
 3. Apple Developer › Identifiers › the App ID › enable **Associated Domains** (regenerate the provisioning profiles; EAS
    does this when it manages credentials).
 4. Build the app with `EXPO_PUBLIC_APP_LINK_HOST=<host>` (and `EXPO_PUBLIC_APP_LINK_PATH` if not the default) in `.env`
-   or the EAS profile's `env`. The config plugin (`plugins/withProAccounts.js`) then adds the `applinks:<host>`
+   or the EAS profile's `env`; store packages (`npm run build:aab` / `build:ipa -- --pro-mode`) read them from
+   `.build.local.env`. The config plugin (`plugins/withProAccounts.js`) then adds the `applinks:<host>`
    entitlement on iOS and a verified (`autoVerify`) https intent filter for the host and path on Android. A **native
    rebuild** is needed (`npx expo prebuild --clean` / a new EAS build); a build without the variable is unchanged.
 5. On a phone: tap the link in the mail. Android: `adb shell pm get-app-links <PACKAGE_NAME>` should show the host as

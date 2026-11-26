@@ -3,6 +3,8 @@ dist/
 .wrangler/
 .preview/
 .dev.vars*
+# The App Link values for scripts/deploy.mjs (never committed)
+.deploy.local.env
 *.tsbuildinfo
 
 # Original paintings (large); the sized WebP files in src/art/ are what gets committed

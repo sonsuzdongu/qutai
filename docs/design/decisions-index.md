@@ -1329,7 +1329,7 @@ Moved to Details (ids retired, not reused): `VER-5`, `VER-6`, `VER-7`, `VER-4`, 
 | `BUILD-12` | Android release builds are signed with Qutai's own upload key, read from a properties file outside the… | Default |  |
 | `BUILD-13` | Keystores, keys and local env files are never committed. `*.jks`, `*.p8`, `*.p12`, `*.key`, `*.pem`,… | Default |  |
 | `BUILD-14` | `EXPO_PUBLIC_*` values are built into the app where anyone can read them, so they are never secrets. | Default |  |
-| `BUILD-15` | The native setup for accounts (the Sign in with Apple entitlement, Google's URL scheme, App Links and… | Default |  |
+| `BUILD-15` | The native setup for accounts (the Sign in with Apple entitlement, Google's URL scheme, App Links and… | Default | 2026-11-26 |
 | `BUILD-16` | Builds without pro mode contain no RevenueCat SDK at all. | Default |  |
 | `BUILD-21` | Builds from the repository are the same code with pro mode off. Forks use their own name, logo, bundle id… | Default |  |
 | `BUILD-22` | Today Android declares REQUEST_INSTALL_PACKAGES, so that "Open" on a downloaded APK reaches the system… | **Waiting** |  |

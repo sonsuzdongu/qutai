@@ -22,7 +22,7 @@ npm run typecheck  # site and Worker
 npm run assets     # regenerate the images in public/ from ../assets (logo, icons, social previews)
 npm run art        # size the miniatures in art-src/ into src/art/ (see ART.md)
 npm run legal      # copy the app's privacy policy and terms into src/data/privacy.json and terms.json (below)
-npm run deploy     # build, then `wrangler deploy` (asks you to log in to Cloudflare the first time)
+npm run deploy     # build, then `wrangler deploy` with the App Link values from .deploy.local.env (scripts/deploy.mjs)
 ```
 
 ## Before the first deploy
@@ -31,7 +31,8 @@ npm run deploy     # build, then `wrangler deploy` (asks you to log in to Cloudf
    social preview images use it; the build warns while it is the `.example` placeholder.
 2. In `wrangler.jsonc`, keep or change the Worker's `name`, and add the domain under `routes` once it is on
    Cloudflare (or attach it in the dashboard).
-3. `npm run deploy`. Nothing else is needed: no environment variables, no KV, no secrets.
+3. `npm run deploy`. Nothing else is needed: no KV, no secrets. Optional: `APPLE_APP_IDS` and `ANDROID_CERT_SHA256` in
+   `.deploy.local.env` (git-ignored) turn on the App Link / Universal Link files (the app repository's docs/app-links.md).
 
 ## How it is put together
 

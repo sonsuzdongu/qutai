@@ -123,6 +123,11 @@ if (pro && !withoutPurchases) {
     sellsCredits = true;
   }
 }
+// The sign-in link as an App Link / Universal Link (docs/app-links.md): optional, pro mode only. Set, not deleted,
+// for the same reason as above; a build without it is as before (the mail's link opens the website's page first).
+env.EXPO_PUBLIC_APP_LINK_HOST = pro ? value('EXPO_PUBLIC_APP_LINK_HOST') : '';
+env.EXPO_PUBLIC_APP_LINK_PATH = pro ? value('EXPO_PUBLIC_APP_LINK_PATH') : '';
+if (env.EXPO_PUBLIC_APP_LINK_HOST) console.log(`Sign-in link opens the app directly from https://${env.EXPO_PUBLIC_APP_LINK_HOST}`);
 const team = value('QUTAI_APPLE_TEAM_ID');
 if (kind === 'ipa' && !/^[A-Z0-9]{10}$/.test(team)) {
   stop('The IPA needs QUTAI_APPLE_TEAM_ID (the 10-character Apple team id), in the environment or in .build.local.env.');
